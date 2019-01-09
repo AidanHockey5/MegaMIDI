@@ -1,23 +1,56 @@
 #include <Arduino.h>
 #include "LTC6903.h"
 #include "YM2612.h"
+#include "SdFat.h"
 
-LTC6903 ymClock(20);
+//DEBUG
+#define DLED 17
+
+//OPM File Format https://vgmrips.net/wiki/OPM_File_Format
+typedef struct
+{
+  uint8_t LFO[5];
+  uint8_t CH[7];
+  uint8_t M1[11];
+  uint8_t C1[11];
+  uint8_t M2[11];
+  uint8_t C2[11];
+} Voice;
+
+//Clocks
+LTC6903 ymClock(24);
+uint32_t masterClockFrequency = 7670453;
+
+//Sound Chips
 YM2612 ym2612 = YM2612();
 
-uint32_t masterClockFrequency = 7670453;
+//SD Card
+SdFat SD;
+File file;
+#define MAX_FILE_NAME_SIZE 128
+char fileName[MAX_FILE_NAME_SIZE];
+uint32_t numberOfFiles = 0;
+uint32_t currentFileNumber = 0;
 
 //C# to C (music note frequencies, not programming languages)
 float notes[]
 {
   277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
 };
-
 uint16_t fNumberNotes[12];
 
+//Voice data
+#define MAX_VOICES 16
+Voice voices[MAX_VOICES];
+
+
+//Prototypes
 void GenerateNoteSet();
 void KeyOn(byte channel, byte key, byte velocity);
 void KeyOff(byte channel, byte key, byte velocity);
+void SetVoice();
+void removeSVI();
+void ReadVoiceData();
 
 
 void GenerateNoteSet()
@@ -36,27 +69,126 @@ void GenerateNoteSet()
 
 void setup() 
 {
+  ymClock.SetFrequency(masterClockFrequency); //PAL 7600489 //NTSC 7670453
+  ym2612.Reset();
   GenerateNoteSet();
-
+  Serial1.begin(9600);
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
+  pinMode(DLED, OUTPUT);
 
-  pinMode(17, OUTPUT);
-  ymClock.SetFrequency(masterClockFrequency); //PAL 7600489 //NTSC 7670453
+  if(!SD.begin(20, SPI_HALF_SPEED))
+  {
+    digitalWrite(DLED, HIGH);
+    while(true){Serial1.println("SD Mount failed!");}
+  }
+  removeSVI();
+
+  //Count total files
+  File countFile;
+  while ( countFile.openNext( SD.vwd(), O_READ ))
+  {
+    countFile.close();
+    numberOfFiles++;
+  }
+  countFile.close();
+  SD.vwd()->rewind();
+
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DEBUG FILE
+  if(file.isOpen())
+    file.close();
+  file = SD.open("test.opm", FILE_READ);
+  if(!file)
+  {
+    digitalWrite(DLED, HIGH);
+    while(true){Serial1.println("File Read failed!");}
+  }
+
   delay(2000);
+  ReadVoiceData();
+  SetVoice();
+}
 
-  ym2612.Reset();
+void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
+{
+  File nextFile;
+  nextFile.openNext(SD.vwd(), O_READ);
+  char name[MAX_FILE_NAME_SIZE];
+  nextFile.getName(name, MAX_FILE_NAME_SIZE);
+  String n = String(name);
+  if(n == "System Volume Information")
+  {
+      if(!nextFile.rmRfStar())
+        Serial.println("Failed to remove SVI file");
+  }
+  SD.vwd()->rewind();
+  nextFile.close();
+}
 
-  delay(100);
+void ReadVoiceData()
+{
+  size_t n;
+  uint8_t voiceCount = 0;
+  char * pEnd;
+  uint8_t vDataRaw[6][11];
+  const size_t LINE_DIM = 60;
+  char line[LINE_DIM];
+  delay(2000);
+  while ((n = file.fgets(line, sizeof(line))) > 0) 
+  {
+      String l = line;
+      //Ignore comments
+      if(l.startsWith("//"))
+        continue;
+      if(l.startsWith("@:"+String(voiceCount)))
+      {
+        voiceCount++;
+        for(int i=0; i<6; i++)
+        {
+          file.fgets(line, sizeof(line));
+          l = line;
+          l.replace("LFO: ", "");
+          l.replace("CH: ", "");
+          l.replace("M1: ", "");
+          l.replace("C1: ", "");
+          l.replace("M2: ", "");
+          l.replace("C2: ", "");
+          l.toCharArray(line, sizeof(line), 0);
 
+          vDataRaw[i][0] = strtoul(line, &pEnd, 10); 
+          for(int j = 1; j<11; j++)
+          {
+            vDataRaw[i][j] = strtoul(pEnd, &pEnd, 10);
+          }
+        }
+
+        for(int i=0; i<5; i++) //LFO
+          voices[voiceCount].LFO[i] = vDataRaw[0][i];
+        for(int i=0; i<7; i++) //CH
+          voices[voiceCount].CH[i] = vDataRaw[1][i];
+        for(int i=0; i<11; i++) //M1
+          voices[voiceCount].M1[i] = vDataRaw[2][i];
+        for(int i=0; i<11; i++) //C1
+          voices[voiceCount].C1[i] = vDataRaw[3][i];
+        for(int i=0; i<11; i++) //M2
+          voices[voiceCount].M2[i] = vDataRaw[4][i];
+        for(int i=0; i<11; i++) //C2
+          voices[voiceCount].C2[i] = vDataRaw[5][i];
+      }
+      if(voiceCount == MAX_VOICES-1)
+        break;
+  }
+  Serial1.println("Done Reading Voice Data");
+}
+
+void SetVoice()
+{
   ym2612.send(0x22, 0x00); // LFO off
   ym2612.send(0x27, 0x00); // CH3 Normal
-  ym2612.send(0x28, 0x00); // Note off (channel 0)
-  ym2612.send(0x28, 0x01); // Note off (channel 1)
-  ym2612.send(0x28, 0x02); // Note off (channel 2)
-  ym2612.send(0x28, 0x04); // Note off (channel 3)
-  ym2612.send(0x28, 0x05); // Note off (channel 4)
-  ym2612.send(0x28, 0x06); // Note off (channel 5)
+  for(int i = 0; i<7; i++) //Turn off all channels
+  {
+    ym2612.send(0x28, i);
+  }
   ym2612.send(0x2B, 0x00); // DAC off
 
   for(int a1 = 0; a1<=1; a1++)
@@ -103,14 +235,12 @@ void setup()
           ym2612.send(0xB4 + i, 0xC0); // Both Spks on
           ym2612.send(0xA4 + i, 0x22); // Set Freq MSB
           ym2612.send(0xA0 + i, 0x69); // Freq LSB
+
+          ym2612.send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
   }
   ym2612.send(0xB4, 0xC0); // Both speakers on
-  ym2612.send(0x28, 0x00); // Key off
-
-  Serial1.begin(9600);
 }
-
 
 void KeyOn(byte channel, byte key, byte velocity)
 {
