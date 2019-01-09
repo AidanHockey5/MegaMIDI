@@ -48,7 +48,8 @@ Voice voices[MAX_VOICES];
 void GenerateNoteSet();
 void KeyOn(byte channel, byte key, byte velocity);
 void KeyOff(byte channel, byte key, byte velocity);
-void SetVoice();
+void ProgramChange(byte channel, byte program);
+void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
 
@@ -75,6 +76,7 @@ void setup()
   Serial1.begin(9600);
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
+  usbMIDI.setHandleProgramChange(ProgramChange);
   pinMode(DLED, OUTPUT);
 
   if(!SD.begin(20, SPI_HALF_SPEED))
@@ -106,7 +108,7 @@ void setup()
 
   delay(2000);
   ReadVoiceData();
-  SetVoice();
+  SetVoice(voices[0]);
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -181,7 +183,7 @@ void ReadVoiceData()
   Serial1.println("Done Reading Voice Data");
 }
 
-void SetVoice()
+void SetVoice(Voice v)
 {
   ym2612.send(0x22, 0x00); // LFO off
   ym2612.send(0x27, 0x00); // CH3 Normal
@@ -195,46 +197,71 @@ void SetVoice()
   {
     for(int i=0; i<3; i++)
     {
+          uint8_t DT1MUL, TL, RSAR, AMD1R, D2R, D1LRR;
+
           //Operator 1
-          ym2612.send(0x30 + i, 0x71, a1); //DT1/Mul
-          ym2612.send(0x40 + i, 0x23, a1); //Total Level
-          ym2612.send(0x50 + i, 0x5F, a1); //RS/AR
-          ym2612.send(0x60 + i, 0x05, a1); //AM/D1R
-          ym2612.send(0x70 + i, 0x02, a1); //D2R
-          ym2612.send(0x80 + i, 0x11, a1); //D1L/RR
+          DT1MUL = (v.M1[8] << 4) | v.M1[7];
+          TL = v.M1[5];
+          RSAR = (v.M1[7] << 6) | v.M1[0];
+          AMD1R = (v.M1[10] << 7) | v.M1[1];
+          D2R = v.M1[2];
+          D1LRR = (v.M1[4] << 4) | v.M1[3];
+          ym2612.send(0x30 + i, DT1MUL, a1); //DT1/Mul
+          ym2612.send(0x40 + i, TL, a1); //Total Level
+          ym2612.send(0x50 + i, RSAR, a1); //RS/AR
+          ym2612.send(0x60 + i, AMD1R, a1); //AM/D1R
+          ym2612.send(0x70 + i, D2R, a1); //D2R
+          ym2612.send(0x80 + i, D1LRR, a1); //D1L/RR
           ym2612.send(0x90 + i, 0x00, a1); //SSG EG
-           
+          
           //Operator 2
-          ym2612.send(0x34 + i, 0x0D, a1); //DT1/Mul
-          ym2612.send(0x44 + i, 0x2D, a1); //Total Level
-          ym2612.send(0x54 + i, 0x99, a1); //RS/AR
-          ym2612.send(0x64 + i, 0x05, a1); //AM/D1R
-          ym2612.send(0x74 + i, 0x02, a1); //D2R
-          ym2612.send(0x84 + i, 0x11, a1); //D1L/RR
+          DT1MUL = (v.C1[8] << 4) | v.C1[7];
+          TL = v.C1[5];
+          RSAR = (v.C1[7] << 6) | v.C1[0];
+          AMD1R = (v.C1[10] << 7) | v.C1[1];
+          D2R = v.C1[2];
+          D1LRR = (v.C1[4] << 4) | v.C1[3];
+          ym2612.send(0x34 + i, DT1MUL, a1); //DT1/Mul
+          ym2612.send(0x44 + i, TL, a1); //Total Level
+          ym2612.send(0x54 + i, RSAR, a1); //RS/AR
+          ym2612.send(0x64 + i, AMD1R, a1); //AM/D1R
+          ym2612.send(0x74 + i, D2R, a1); //D2R
+          ym2612.send(0x84 + i, D1LRR, a1); //D1L/RR
           ym2612.send(0x94 + i, 0x00, a1); //SSG EG
            
-         //Operator 3
-          ym2612.send(0x38 + i, 0x33, a1); //DT1/Mul
-          ym2612.send(0x48 + i, 0x26, a1); //Total Level
-          ym2612.send(0x58 + i, 0x5F, a1); //RS/AR
-          ym2612.send(0x68 + i, 0x05, a1); //AM/D1R
-          ym2612.send(0x78 + i, 0x02, a1); //D2R
-          ym2612.send(0x88 + i, 0x11, a1); //D1L/RR
+          //Operator 3
+          DT1MUL = (v.M2[8] << 4) | v.M2[7];
+          TL = v.M2[5];
+          RSAR = (v.M2[7] << 6) | v.M2[0];
+          AMD1R = (v.M2[10] << 7) | v.M2[1];
+          D2R = v.M2[2];
+          D1LRR = (v.M2[4] << 4) | v.M2[3];
+          ym2612.send(0x38 + i, DT1MUL, a1); //DT1/Mul
+          ym2612.send(0x48 + i, TL, a1); //Total Level
+          ym2612.send(0x58 + i, RSAR, a1); //RS/AR
+          ym2612.send(0x68 + i, AMD1R, a1); //AM/D1R
+          ym2612.send(0x78 + i, D2R, a1); //D2R
+          ym2612.send(0x88 + i, D1LRR, a1); //D1L/RR
           ym2612.send(0x98 + i, 0x00, a1); //SSG EG
                    
-         //Operator 4
-          ym2612.send(0x3C + i, 0x01, a1); //DT1/Mul
-          ym2612.send(0x4C + i, 0x00, a1); //Total Level
-          ym2612.send(0x5C + i, 0x94, a1); //RS/AR
-          ym2612.send(0x6C + i, 0x07, a1); //AM/D1R
-          ym2612.send(0x7C + i, 0x02, a1); //D2R
-          ym2612.send(0x8C + i, 0xA6, a1); //D1L/RR
+          //Operator 4
+          DT1MUL = (v.C2[8] << 4) | v.C2[7];
+          TL = v.C2[5];
+          RSAR = (v.C2[7] << 6) | v.C2[0];
+          AMD1R = (v.C2[10] << 7) | v.C2[1];
+          D2R = v.C2[2];
+          D1LRR = (v.C2[4] << 4) | v.C2[3];
+          ym2612.send(0x3C + i, DT1MUL, a1); //DT1/Mul
+          ym2612.send(0x4C + i, TL, a1); //Total Level
+          ym2612.send(0x5C + i, RSAR, a1); //RS/AR
+          ym2612.send(0x6C + i, AMD1R, a1); //AM/D1R
+          ym2612.send(0x7C + i, D2R, a1); //D2R
+          ym2612.send(0x8C + i, D1LRR, a1); //D1L/RR
           ym2612.send(0x9C + i, 0x00, a1); //SSG EG
-          
-          ym2612.send(0xB0 + i, 0x32); // Ch FB/Algo
-          ym2612.send(0xB4 + i, 0xC0); // Both Spks on
-          ym2612.send(0xA4 + i, 0x22); // Set Freq MSB
-          ym2612.send(0xA0 + i, 0x69); // Freq LSB
+
+          uint8_t FBALGO = (v.CH[1] << 3) | v.CH[3];
+          ym2612.send(0xB0 + i, FBALGO); // Ch FB/Algo
+          //ym2612.send(0xB4 + i, 0xC0); // Both Spks on
 
           ym2612.send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
@@ -270,6 +297,12 @@ void KeyOff(byte channel, byte key, byte velocity)
   uint8_t closedChannel = ym2612.SetChannelOff(key);
   bool setA1 = closedChannel > 2;
   ym2612.send(0x28, 0x00 + closedChannel%3 + (setA1 << 2));
+}
+
+void ProgramChange(byte channel, byte program)
+{
+  program %= 16;
+  SetVoice(voices[program]);
 }
 
 void loop() 
