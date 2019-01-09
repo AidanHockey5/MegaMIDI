@@ -15,7 +15,7 @@ void YM2612::Reset()
     digitalWriteFast(_IC, HIGH); //_IC HIGH
 }
 
-void YM2612::send(unsigned char addr, unsigned char data, bool setA1) //0x52 = A1 LOW, 0x53 = A1 HIGH
+void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
 {
     digitalWriteFast(_A1, setA1);
     digitalWriteFast(_A0, LOW);
@@ -32,6 +32,38 @@ void YM2612::send(unsigned char addr, unsigned char data, bool setA1) //0x52 = A
     delayMicroseconds(1);
     digitalWriteFast(_WR, HIGH);
     digitalWriteFast(_CS, HIGH);
+    digitalWriteFast(_A1, LOW);
+    digitalWriteFast(_A0, LOW);
+}
+
+uint8_t YM2612::SetChannelOn(uint8_t key)
+{
+    for(int i = 0; i<MAX_CHANNELS; i++)
+    {
+        if(!channels[i].keyOn)
+        {
+            if(channels[i].keyNumber == key)
+                continue;
+            channels[i].keyOn = true;
+            channels[i].keyNumber = key;
+            return i;
+        }
+    }
+    return 0xFF;
+}
+
+uint8_t YM2612::SetChannelOff(uint8_t key)
+{
+    for(int i = 0; i<MAX_CHANNELS; i++)
+    {
+        if(channels[i].keyNumber == key)
+        {
+            channels[i].keyNumber = 0;
+            channels[i].keyOn = false;
+            return i;
+        }
+    }
+    return 0;
 }
 
 //Notes
