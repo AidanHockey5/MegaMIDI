@@ -6,6 +6,10 @@
 //DEBUG
 #define DLED 17
 
+//IO
+#define PROG_UP 16
+#define PROG_DOWN 15
+
 //OPM File Format https://vgmrips.net/wiki/OPM_File_Format
 typedef struct
 {
@@ -81,6 +85,8 @@ void setup()
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
   pinMode(DLED, OUTPUT);
+  pinMode(PROG_UP, INPUT_PULLUP);
+  pinMode(PROG_DOWN, INPUT_PULLUP);
 
   if(!SD.begin(20, SPI_HALF_SPEED))
   {
@@ -378,4 +384,14 @@ void loop()
   usbMIDI.read();
   if(Serial1.available() > 0)
     HandleSerialIn();
+  if(!digitalReadFast(PROG_UP))
+  {
+    ProgramChange(0, lastProgram+1);
+    delay(200);
+  }
+  if(!digitalReadFast(PROG_DOWN))
+  {
+    ProgramChange(0, lastProgram-1);
+    delay(200);
+  }
 }
