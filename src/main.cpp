@@ -42,6 +42,8 @@ uint16_t fNumberNotes[12];
 //Voice data
 #define MAX_VOICES 16
 Voice voices[MAX_VOICES];
+uint8_t currentProgram = 0;
+uint8_t maxValidVoices = 0;
 
 
 //Prototypes
@@ -52,6 +54,7 @@ void ProgramChange(byte channel, byte program);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
+void HandleSerialIn();
 
 
 void GenerateNoteSet()
@@ -99,16 +102,14 @@ void setup()
   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DEBUG FILE
   if(file.isOpen())
     file.close();
-  file = SD.open("test.opm", FILE_READ);
+  file.openNext(SD.vwd(), O_READ);
   if(!file)
   {
     digitalWrite(DLED, HIGH);
     while(true){Serial1.println("File Read failed!");}
   }
-
-  delay(2000);
   ReadVoiceData();
-  SetVoice(voices[0]);
+  SetVoice(voices[1]);
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -135,14 +136,17 @@ void ReadVoiceData()
   uint8_t vDataRaw[6][11];
   const size_t LINE_DIM = 60;
   char line[LINE_DIM];
-  delay(2000);
   while ((n = file.fgets(line, sizeof(line))) > 0) 
   {
       String l = line;
       //Ignore comments
       if(l.startsWith("//"))
         continue;
-      if(l.startsWith("@:"+String(voiceCount)))
+      if(l.startsWith("@:"+String(voiceCount)+" no Name"))
+      {
+        maxValidVoices = voiceCount;
+      }
+      else if(l.startsWith("@:"+String(voiceCount)))
       {
         voiceCount++;
         for(int i=0; i<6; i++)
@@ -261,12 +265,12 @@ void SetVoice(Voice v)
 
           uint8_t FBALGO = (v.CH[1] << 3) | v.CH[3];
           ym2612.send(0xB0 + i, FBALGO); // Ch FB/Algo
-          //ym2612.send(0xB4 + i, 0xC0); // Both Spks on
+          ym2612.send(0xB4 + i, 0xC0); // Both Spks on
 
           ym2612.send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
   }
-  ym2612.send(0xB4, 0xC0); // Both speakers on
+  //ym2612.send(0xB4, 0xC0); // Both speakers on
 }
 
 void KeyOn(byte channel, byte key, byte velocity)
@@ -284,9 +288,9 @@ void KeyOn(byte channel, byte key, byte velocity)
   if(openChannel == 0xFF)
     return;
 
-  Serial1.print("OFFSET: "); Serial1.println(offset);
-  Serial1.print("CHANNEL: "); Serial1.println(openChannel);
-  Serial1.print("A1: "); Serial1.println(setA1);
+  // Serial1.print("OFFSET: "); Serial1.println(offset);
+  // Serial1.print("CHANNEL: "); Serial1.println(openChannel);
+  // Serial1.print("A1: "); Serial1.println(setA1);
   ym2612.send(0xA4 + offset, (block << 3) + msb, setA1);
   ym2612.send(0xA0 + offset, lsb, setA1);
   ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));
@@ -299,13 +303,79 @@ void KeyOff(byte channel, byte key, byte velocity)
   ym2612.send(0x28, 0x00 + closedChannel%3 + (setA1 << 2));
 }
 
+uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
   program %= 16;
-  SetVoice(voices[program]);
+
+  if(program > lastProgram)
+  {
+    if(currentProgram + 1 < maxValidVoices)
+      currentProgram++;
+  }
+  else if(program < lastProgram)
+  {
+    if(currentProgram > 0)
+      currentProgram--;
+  }
+  SetVoice(voices[currentProgram]);
+  lastProgram = program;
+}
+
+void HandleSerialIn()
+{
+  while(Serial1.available())
+  {
+    char serialCmd = Serial1.read();
+    switch(serialCmd)
+    {
+      case 'r':
+      {
+        String req = Serial1.readString();
+        req.remove(0, 1); //Remove colon character
+        SD.vwd()->rewind();
+        bool fileFound = false;
+        Serial1.print("REQUEST: ");Serial1.println(req);
+        File nextFile;
+        for(uint32_t i = 0; i<numberOfFiles; i++)
+        {
+            nextFile.close();
+            nextFile.openNext(SD.vwd(), O_READ);
+            nextFile.getName(fileName, MAX_FILE_NAME_SIZE);
+            String tmpFN = String(fileName);
+            tmpFN.trim();
+            req.trim();
+            if(tmpFN == req)
+            {
+              currentFileNumber = i;
+              fileFound = true;
+              break;
+            }
+          }
+          nextFile.close();
+      }
+      break;
+      default:
+        continue;
+    }
+    if(file.isOpen())
+      file.close();
+    file = SD.open(fileName, FILE_READ);
+    if(!file)
+    {
+      Serial1.println("Failed to read file");
+      digitalWrite(DLED, HIGH);
+      while(true){}
+    }
+    ReadVoiceData();
+    SetVoice(voices[0]);
+    currentProgram = 0;
+  }
 }
 
 void loop() 
 {
   usbMIDI.read();
+  if(Serial1.available() > 0)
+    HandleSerialIn();
 }
