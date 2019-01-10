@@ -8,6 +8,8 @@
 //In Arduino, look for Tools->Port->(Emulated Serial)
 //Open serial monitor
 //Device should reset. You may need to try this a couple times.
+//----OR----
+//Use SERIAL_CONNECT.bat file found in the 'tools' folder of this repository.
 
 //DEBUG
 #define DLED 17
@@ -112,7 +114,6 @@ void setup()
   countFile.close();
   SD.vwd()->rewind();
 
-  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DEBUG FILE
   if(file.isOpen())
     file.close();
   file.openNext(SD.vwd(), O_READ);
@@ -158,6 +159,7 @@ void ReadVoiceData()
       if(l.startsWith("@:"+String(voiceCount)+" no Name"))
       {
         maxValidVoices = voiceCount;
+        break;
       }
       else if(l.startsWith("@:"+String(voiceCount)))
       {
@@ -323,7 +325,6 @@ void SetVoice(Voice v)
           ym2612.send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
   }
-  //ym2612.send(0xB4, 0xC0); // Both speakers on
 }
 
 void KeyOn(byte channel, byte key, byte velocity)
@@ -340,10 +341,6 @@ void KeyOn(byte channel, byte key, byte velocity)
 
   if(openChannel == 0xFF)
     return;
-
-  // Serial.print("OFFSET: "); Serial.println(offset);
-  // Serial.print("CHANNEL: "); Serial.println(openChannel);
-  // Serial.print("A1: "); Serial.println(setA1);
   ym2612.send(0xA4 + offset, (block << 3) + msb, setA1);
   ym2612.send(0xA0 + offset, lsb, setA1);
   ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));
@@ -359,19 +356,13 @@ void KeyOff(byte channel, byte key, byte velocity)
 uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
-  program %= 16;
-
-  if(program > lastProgram)
-  {
-    if(currentProgram + 1 < maxValidVoices)
-      currentProgram++;
-  }
-  else if(program < lastProgram)
-  {
-    if(currentProgram > 0)
-      currentProgram--;
-  }
+  if(program == 255)
+    program = 0;
+  program %= maxValidVoices;
+  currentProgram = program;
   SetVoice(voices[currentProgram]);
+  Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
+  DumpVoiceData(voices[currentProgram]);
   lastProgram = program;
 }
 
@@ -382,7 +373,23 @@ void HandleSerialIn()
     char serialCmd = Serial.read();
     switch(serialCmd)
     {
-      case 'r':
+      case 'o': //Dump current voice operator info
+      {
+        Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
+        DumpVoiceData(voices[currentProgram]);
+        return;
+      }
+      case '+': //Move up one voice in current OPM file
+      {
+        ProgramChange(0, currentProgram+1);
+        return;
+      }
+      case '-': //Move down one voice in current OPM file
+      {
+        ProgramChange(0, currentProgram-1);
+        return;
+      }
+      case 'r': //Request a new opm file. format:    r:myOpmFile.opm
       {
         String req = Serial.readString();
         req.remove(0, 1); //Remove colon character
@@ -433,12 +440,12 @@ void loop()
     HandleSerialIn();
   if(!digitalReadFast(PROG_UP))
   {
-    ProgramChange(0, lastProgram+1);
+    ProgramChange(0, currentProgram+1);
     delay(200);
   }
   if(!digitalReadFast(PROG_DOWN))
   {
-    ProgramChange(0, lastProgram-1);
+    ProgramChange(0, currentProgram-1);
     delay(200);
   }
 }
