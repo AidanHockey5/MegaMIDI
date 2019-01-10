@@ -2,6 +2,12 @@
 #include "LTC6903.h"
 #include "YM2612.h"
 #include "SdFat.h"
+#include "usb_midi_serial.h"
+
+//Notes: Access serial connection using Arduino IDE. Ensure that teensy software suite has been installed https://www.pjrc.com/teensy/td_download.html
+//In Arduino, look for Tools->Port->(Emulated Serial)
+//Open serial monitor
+//Device should reset. You may need to try this a couple times.
 
 //DEBUG
 #define DLED 17
@@ -81,7 +87,7 @@ void setup()
   ymClock.SetFrequency(masterClockFrequency); //PAL 7600489 //NTSC 7670453
   ym2612.Reset();
   GenerateNoteSet();
-  Serial1.begin(9600);
+  Serial.begin(9600);
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
@@ -92,7 +98,7 @@ void setup()
   if(!SD.begin(20, SPI_HALF_SPEED))
   {
     digitalWrite(DLED, HIGH);
-    while(true){Serial1.println("SD Mount failed!");}
+    while(true){Serial.println("SD Mount failed!");}
   }
   removeSVI();
 
@@ -113,7 +119,7 @@ void setup()
   if(!file)
   {
     digitalWrite(DLED, HIGH);
-    while(true){Serial1.println("File Read failed!");}
+    while(true){Serial.println("File Read failed!");}
   }
   ReadVoiceData();
   SetVoice(voices[0]);
@@ -191,49 +197,47 @@ void ReadVoiceData()
       if(voiceCount == MAX_VOICES-1)
         break;
   }
-  Serial1.println("Done Reading Voice Data");
-  DumpVoiceData(voices[0]);
-
+  Serial.println("Done Reading Voice Data");
 }
 
 void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM file
 {
-  Serial1.print("LFO: ");
+  Serial.print("LFO: ");
   for(int i = 0; i<5; i++)
   {
-    Serial1.print(v.LFO[i]); Serial1.print(" ");
+    Serial.print(v.LFO[i]); Serial.print(" ");
   }
-  Serial1.println();
-  Serial1.print("CH: ");
+  Serial.println();
+  Serial.print("CH: ");
   for(int i = 0; i<7; i++)
   {
-    Serial1.print(v.CH[i]); Serial1.print(" ");
+    Serial.print(v.CH[i]); Serial.print(" ");
   }
-  Serial1.println();
-  Serial1.print("M1: ");
+  Serial.println();
+  Serial.print("M1: ");
   for(int i = 0; i<11; i++)
   {
-    Serial1.print(v.M1[i]); Serial1.print(" ");
+    Serial.print(v.M1[i]); Serial.print(" ");
   }
-  Serial1.println();
-  Serial1.print("C1: ");
+  Serial.println();
+  Serial.print("C1: ");
   for(int i = 0; i<11; i++)
   {
-    Serial1.print(v.C1[i]); Serial1.print(" ");
+    Serial.print(v.C1[i]); Serial.print(" ");
   }
-  Serial1.println();
-  Serial1.print("M2: ");
+  Serial.println();
+  Serial.print("M2: ");
   for(int i = 0; i<11; i++)
   {
-    Serial1.print(v.M2[i]); Serial1.print(" ");
+    Serial.print(v.M2[i]); Serial.print(" ");
   }
-  Serial1.println();
-  Serial1.print("C2: ");
+  Serial.println();
+  Serial.print("C2: ");
   for(int i = 0; i<11; i++)
   {
-    Serial1.print(v.C2[i]); Serial1.print(" ");
+    Serial.print(v.C2[i]); Serial.print(" ");
   }
-  Serial1.println();
+  Serial.println();
 }
 
 void SetVoice(Voice v)
@@ -337,9 +341,9 @@ void KeyOn(byte channel, byte key, byte velocity)
   if(openChannel == 0xFF)
     return;
 
-  // Serial1.print("OFFSET: "); Serial1.println(offset);
-  // Serial1.print("CHANNEL: "); Serial1.println(openChannel);
-  // Serial1.print("A1: "); Serial1.println(setA1);
+  // Serial.print("OFFSET: "); Serial.println(offset);
+  // Serial.print("CHANNEL: "); Serial.println(openChannel);
+  // Serial.print("A1: "); Serial.println(setA1);
   ym2612.send(0xA4 + offset, (block << 3) + msb, setA1);
   ym2612.send(0xA0 + offset, lsb, setA1);
   ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));
@@ -373,18 +377,18 @@ void ProgramChange(byte channel, byte program)
 
 void HandleSerialIn()
 {
-  while(Serial1.available())
+  while(Serial.available())
   {
-    char serialCmd = Serial1.read();
+    char serialCmd = Serial.read();
     switch(serialCmd)
     {
       case 'r':
       {
-        String req = Serial1.readString();
+        String req = Serial.readString();
         req.remove(0, 1); //Remove colon character
         SD.vwd()->rewind();
         bool fileFound = false;
-        Serial1.print("REQUEST: ");Serial1.println(req);
+        Serial.print("REQUEST: ");Serial.println(req);
         File nextFile;
         for(uint32_t i = 0; i<numberOfFiles; i++)
         {
@@ -412,7 +416,7 @@ void HandleSerialIn()
     file = SD.open(fileName, FILE_READ);
     if(!file)
     {
-      Serial1.println("Failed to read file");
+      Serial.println("Failed to read file");
       digitalWrite(DLED, HIGH);
       while(true){}
     }
@@ -425,7 +429,7 @@ void HandleSerialIn()
 void loop() 
 {
   usbMIDI.read();
-  if(Serial1.available() > 0)
+  if(Serial.available() > 0)
     HandleSerialIn();
   if(!digitalReadFast(PROG_UP))
   {
