@@ -59,6 +59,7 @@ void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
+void DumpVoiceData(Voice v);
 
 
 void GenerateNoteSet()
@@ -115,7 +116,7 @@ void setup()
     while(true){Serial1.println("File Read failed!");}
   }
   ReadVoiceData();
-  SetVoice(voices[1]);
+  SetVoice(voices[0]);
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -154,7 +155,6 @@ void ReadVoiceData()
       }
       else if(l.startsWith("@:"+String(voiceCount)))
       {
-        voiceCount++;
         for(int i=0; i<6; i++)
         {
           file.fgets(line, sizeof(line));
@@ -186,11 +186,54 @@ void ReadVoiceData()
           voices[voiceCount].M2[i] = vDataRaw[4][i];
         for(int i=0; i<11; i++) //C2
           voices[voiceCount].C2[i] = vDataRaw[5][i];
+        voiceCount++;
       }
       if(voiceCount == MAX_VOICES-1)
         break;
   }
   Serial1.println("Done Reading Voice Data");
+  DumpVoiceData(voices[0]);
+
+}
+
+void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM file
+{
+  Serial1.print("LFO: ");
+  for(int i = 0; i<5; i++)
+  {
+    Serial1.print(v.LFO[i]); Serial1.print(" ");
+  }
+  Serial1.println();
+  Serial1.print("CH: ");
+  for(int i = 0; i<7; i++)
+  {
+    Serial1.print(v.CH[i]); Serial1.print(" ");
+  }
+  Serial1.println();
+  Serial1.print("M1: ");
+  for(int i = 0; i<11; i++)
+  {
+    Serial1.print(v.M1[i]); Serial1.print(" ");
+  }
+  Serial1.println();
+  Serial1.print("C1: ");
+  for(int i = 0; i<11; i++)
+  {
+    Serial1.print(v.C1[i]); Serial1.print(" ");
+  }
+  Serial1.println();
+  Serial1.print("M2: ");
+  for(int i = 0; i<11; i++)
+  {
+    Serial1.print(v.M2[i]); Serial1.print(" ");
+  }
+  Serial1.println();
+  Serial1.print("C2: ");
+  for(int i = 0; i<11; i++)
+  {
+    Serial1.print(v.C2[i]); Serial1.print(" ");
+  }
+  Serial1.println();
 }
 
 void SetVoice(Voice v)
