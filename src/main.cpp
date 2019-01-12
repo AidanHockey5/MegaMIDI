@@ -51,9 +51,11 @@ uint8_t pitchBendRange = 2; //How many semitones would you like the pitch-bender
 
 //Voice data
 #define MAX_VOICES 16
+#define MAX_OCTAVE_SHIFT 5
 Voice voices[MAX_VOICES];
 uint8_t currentProgram = 0;
 uint8_t maxValidVoices = 0;
+uint8_t octaveShift = 0;
 
 
 //Prototypes
@@ -66,22 +68,25 @@ void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
+void ShiftOctaveUp();
+void ShiftOctaveDown();
 void SetFrequency(uint16_t f, uint8_t channel);
 float NoteToFrequency(uint8_t note);
+
 
 float NoteToFrequency(uint8_t note)
 {
     //Elegant note/freq system by diegodorado
     //Check out his project at https://github.com/diegodorado/arduinoProjects/tree/master/ym2612
-    static float freq[] = 
+    const static float freq[] = 
     {
       261.63f,   277.18f,   293.66f,   311.13f,   329.63f,   349.23f,   369.99f,   392.00f,   415.30f,   440.00f,   466.16f,   493.88f, 
     }; 
-    static float multiplier[] = 
+    const static float multiplier[] = 
     {
       0.03125f,   0.0625f,   0.125f,   0.25f,   0.5f,   1.0f,   2.0f,   4.0f,   8.0f,   16.0f,   32.0f, 
     }; 
-    return freq[note%12]*multiplier[note/12];
+    return freq[note%12]*multiplier[(note/12)+octaveShift];
 }
 
 //Notes precalcuated, keeping here for people to reference it if they need it.
@@ -143,8 +148,11 @@ void setup()
     digitalWrite(DLED, HIGH);
     while(true){Serial.println("File Read failed!");}
   }
+  file.getName(fileName, MAX_FILE_NAME_SIZE);
+  Serial.println(fileName);
   ReadVoiceData();
   SetVoice(voices[0]);
+  DumpVoiceData(voices[0]);
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -415,6 +423,22 @@ void ProgramChange(byte channel, byte program)
   lastProgram = program;
 }
 
+void ShiftOctaveUp()
+{
+  if(octaveShift == MAX_OCTAVE_SHIFT)
+    return;
+  octaveShift++;
+  Serial.print("Octave Shift Up: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+}
+
+void ShiftOctaveDown()
+{
+  if(octaveShift == 0)
+    return;
+  octaveShift--;
+  Serial.print("Octave Shift Down: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+}
+
 void HandleSerialIn()
 {
   while(Serial.available())
@@ -436,6 +460,21 @@ void HandleSerialIn()
       case '-': //Move down one voice in current OPM file
       {
         ProgramChange(0, currentProgram-1);
+        return;
+      }
+      case '>':
+      {
+        ShiftOctaveUp();
+        return;
+      }
+      case '<':
+      {
+        ShiftOctaveDown();
+        return;
+      }
+      case '?':
+      {
+        Serial.println(fileName);
         return;
       }
       case 'r': //Request a new opm file. format:    r:myOpmFile.opm
