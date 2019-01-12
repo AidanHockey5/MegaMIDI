@@ -4,6 +4,8 @@
 #include "SdFat.h"
 #include "usb_midi_serial.h"
 
+#define mask(s) (~(~0<<s))
+
 //Notes: Access serial connection using Arduino IDE. Ensure that teensy software suite has been installed https://www.pjrc.com/teensy/td_download.html
 //In Arduino, look for Tools->Port->(Emulated Serial)
 //Open serial monitor
@@ -44,12 +46,14 @@ char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
 
-//C# to C (music note frequencies, not programming languages)
+//C4# to C5 
 float notes[]
 {
   277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
 };
 uint16_t fNumberNotes[12];
+int16_t pitchBend = 0;
+uint8_t pitchBendRange = 2; //How many semitones would you like the pitch-bender to range? Standard = 2
 
 //Voice data
 #define MAX_VOICES 16
@@ -59,40 +63,57 @@ uint8_t maxValidVoices = 0;
 
 
 //Prototypes
-void GenerateNoteSet();
 void KeyOn(byte channel, byte key, byte velocity);
 void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
+void PitchChange(byte channel, int pitch);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
+void SetFrequency(uint16_t f, uint8_t channel);
+float NoteToFrequency(uint8_t note);
 
-
-void GenerateNoteSet()
+float NoteToFrequency(uint8_t note)
 {
-  for(int i = 0; i < 12; i++)
-  {
-    //YM3438 manual f-number formula
-    //F-Number = (144 x fNote x 2^20 / fm) / 2^(B-1)
-    //fNote = desired note frequency
-    //fm = YM clock frequency
-    //B = Block data, in this case, it's 4
-    uint16_t F = (144*notes[i]*(pow(2, 20))/masterClockFrequency) / pow(2, 4-1);
-    fNumberNotes[i] = F;
-  }
+    //Elegant note/freq system by diegodorado
+    //Check out his project at https://github.com/diegodorado/arduinoProjects/tree/master/ym2612
+    static float freq[] = 
+    {
+      261.63f,   277.18f,   293.66f,   311.13f,   329.63f,   349.23f,   369.99f,   392.00f,   415.30f,   440.00f,   466.16f,   493.88f, 
+    }; 
+    static float multiplier[] = 
+    {
+      0.03125f,   0.0625f,   0.125f,   0.25f,   0.5f,   1.0f,   2.0f,   4.0f,   8.0f,   16.0f,   32.0f, 
+    }; 
+    return freq[note%12]*multiplier[note/12];
 }
+
+//Notes precalcuated, keeping here for people to reference it if they need it.
+// void GenerateNoteSet()
+// {
+//   for(int i = 0; i < 12; i++)
+//   {
+//     //YM3438 manual f-number formula
+//     //F-Number = (144 x fNote x 2^20 / fm) / 2^(B-1)
+//     //fNote = desired note frequency
+//     //fm = YM clock frequency
+//     //B = Block data, in this case, it's 4
+//     uint16_t F = (144*notes[i]*(pow(2, 20))/masterClockFrequency) / pow(2, 4-1);
+//     fNumberNotes[i] = F;
+//   }
+// }
 
 void setup() 
 {
   ymClock.SetFrequency(masterClockFrequency); //PAL 7600489 //NTSC 7670453
   ym2612.Reset();
-  GenerateNoteSet();
-  Serial.begin(9600);
+  Serial.begin(115200);
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
+  usbMIDI.setHandlePitchChange(PitchChange);
   pinMode(DLED, OUTPUT);
   pinMode(PROG_UP, INPUT_PULLUP);
   pinMode(PROG_DOWN, INPUT_PULLUP);
@@ -327,23 +348,51 @@ void SetVoice(Voice v)
   }
 }
 
+void PitchChange(byte channel, int pitch)
+{
+  pitchBend = pitch;
+  for(int i = 0; i<MAX_CHANNELS; i++)
+  {
+    if(ym2612.channels[i].keyOn)
+    {
+    float freqFrom = NoteToFrequency(ym2612.channels[i].keyNumber-pitchBendRange);
+    float freqTo = NoteToFrequency(ym2612.channels[i].keyNumber+pitchBendRange);
+    SetFrequency(map(pitchBend,-8192, 8191, freqFrom, freqTo), i);
+    }
+  }
+}
+
+void SetFrequency(uint16_t f, uint8_t channel)
+{
+  int block = 2;
+  uint16_t frq;
+  while(f >= 2048)
+  {
+    f /= 2;
+    block++;
+  }
+  frq = f;
+  bool setA1 = channel > 2;
+  ym2612.send(0xA4 + channel%3, ((frq >> 8) & mask(3)) | ((block & mask(3)) << 3), setA1);
+  ym2612.send(0xA0 + channel%3, frq, setA1);
+}
+
 void KeyOn(byte channel, byte key, byte velocity)
 {
-  uint8_t offset, block, msb, lsb;
   uint8_t openChannel = ym2612.SetChannelOn(key); 
-  offset = openChannel % 3;
-  block = key / 12;
-  key = key % 12;
-  lsb = fNumberNotes[key] % 256;
-  msb = fNumberNotes[key] >> 8;
-
+  uint8_t offset = openChannel % 3;
   bool setA1 = openChannel > 2;
-
   if(openChannel == 0xFF)
     return;
-  ym2612.send(0xA4 + offset, (block << 3) + msb, setA1);
-  ym2612.send(0xA0 + offset, lsb, setA1);
-  ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));
+  if(pitchBend == 0)
+    SetFrequency(NoteToFrequency(key), openChannel);
+  else
+  {
+    float freqFrom = NoteToFrequency(key-pitchBendRange);;
+    float freqTo = NoteToFrequency(key+pitchBendRange);
+    SetFrequency(map(pitchBend, -8192, 8191, freqFrom, freqTo), openChannel);
+  }
+  ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));  
 }
 
 void KeyOff(byte channel, byte key, byte velocity)

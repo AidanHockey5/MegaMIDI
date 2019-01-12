@@ -8,6 +8,7 @@ typedef struct
 {
     bool keyOn = false;
     uint8_t keyNumber = 0;
+    uint8_t blockNumber = 0;
 } Channel;
 
 class YM2612

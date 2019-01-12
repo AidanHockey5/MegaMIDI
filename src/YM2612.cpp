@@ -42,10 +42,11 @@ uint8_t YM2612::SetChannelOn(uint8_t key)
     {
         if(!channels[i].keyOn)
         {
-            if(channels[i].keyNumber == key)
-                continue;
+            // if(channels[i].keyNumber == key)
+            //     continue;
             channels[i].keyOn = true;
             channels[i].keyNumber = key;
+            channels[i].blockNumber = key/12;
             return i;
         }
     }
@@ -58,7 +59,7 @@ uint8_t YM2612::SetChannelOff(uint8_t key)
     {
         if(channels[i].keyNumber == key)
         {
-            channels[i].keyNumber = 0;
+            //channels[i].keyNumber = 0;
             channels[i].keyOn = false;
             return i;
         }
