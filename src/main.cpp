@@ -46,12 +46,6 @@ char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
 
-//C4# to C5 
-float notes[]
-{
-  277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
-};
-uint16_t fNumberNotes[12];
 int16_t pitchBend = 0;
 uint8_t pitchBendRange = 2; //How many semitones would you like the pitch-bender to range? Standard = 2
 
@@ -91,6 +85,12 @@ float NoteToFrequency(uint8_t note)
 }
 
 //Notes precalcuated, keeping here for people to reference it if they need it.
+//C4# to C5 
+// float notes[]
+// {
+//   277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
+// };
+// uint16_t fNumberNotes[12];
 // void GenerateNoteSet()
 // {
 //   for(int i = 0; i < 12; i++)
@@ -388,7 +388,7 @@ void KeyOn(byte channel, byte key, byte velocity)
     SetFrequency(NoteToFrequency(key), openChannel);
   else
   {
-    float freqFrom = NoteToFrequency(key-pitchBendRange);;
+    float freqFrom = NoteToFrequency(key-pitchBendRange);
     float freqTo = NoteToFrequency(key+pitchBendRange);
     SetFrequency(map(pitchBend, -8192, 8191, freqFrom, freqTo), openChannel);
   }
