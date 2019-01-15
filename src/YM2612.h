@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 const int MAX_CHANNELS = 6;
+const int REG_COUNT = 0xB6;
 
 typedef struct
 {
@@ -22,6 +23,8 @@ private:
     uint8_t _A1 = 43;
 public:
     YM2612();
+    uint8_t shadowRegLow[REG_COUNT]; //Shadow Registers
+    uint8_t shadowRegHigh[REG_COUNT];
     Channel channels[MAX_CHANNELS];
     uint8_t SetChannelOn(uint8_t key);
     uint8_t SetChannelOff(uint8_t key);

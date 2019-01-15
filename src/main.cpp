@@ -56,6 +56,9 @@ Voice voices[MAX_VOICES];
 uint8_t currentProgram = 0;
 uint8_t maxValidVoices = 0;
 uint8_t octaveShift = 0;
+uint8_t lfoOn = false;
+uint8_t lfoFrq = 0;
+uint8_t lfoSens = 7;
 
 
 //Prototypes
@@ -63,15 +66,19 @@ void KeyOn(byte channel, byte key, byte velocity);
 void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
 void PitchChange(byte channel, int pitch);
+void ControlChange(byte channel, byte control, byte value);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
+void DumpRegisterData(bool isHighReg);
 void ShiftOctaveUp();
 void ShiftOctaveDown();
 void SetFrequency(uint16_t f, uint8_t channel);
+void ToggleLFO();
 float NoteToFrequency(uint8_t note);
+
 
 
 float NoteToFrequency(uint8_t note)
@@ -119,6 +126,7 @@ void setup()
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
   usbMIDI.setHandlePitchChange(PitchChange);
+  usbMIDI.setHandleControlChange(ControlChange);
   pinMode(DLED, OUTPUT);
   pinMode(PROG_UP, INPUT_PULLUP);
   pinMode(PROG_DOWN, INPUT_PULLUP);
@@ -231,6 +239,18 @@ void ReadVoiceData()
   Serial.println("Done Reading Voice Data");
 }
 
+void DumpRegisterData(bool isHighReg)
+{
+  for(int i = 0; i< REG_COUNT; i++)
+  {
+    Serial.print(i, HEX); Serial.print(":     ");
+    if(isHighReg)
+      Serial.println(ym2612.shadowRegHigh[i], HEX);
+    else
+      Serial.println(ym2612.shadowRegLow[i], HEX);
+  }
+}
+
 void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM file
 {
   Serial.print("LFO: ");
@@ -273,6 +293,9 @@ void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM fi
 
 void SetVoice(Voice v)
 {
+  bool resetLFO = lfoOn;
+  if(lfoOn)
+    ToggleLFO();
   ym2612.send(0x22, 0x00); // LFO off
   ym2612.send(0x27, 0x00); // CH3 Normal
   for(int i = 0; i<7; i++) //Turn off all channels
@@ -354,6 +377,8 @@ void SetVoice(Voice v)
           ym2612.send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
   }
+  if(resetLFO)
+    ToggleLFO();
 }
 
 void PitchChange(byte channel, int pitch)
@@ -410,6 +435,92 @@ void KeyOff(byte channel, byte key, byte velocity)
   ym2612.send(0x28, 0x00 + closedChannel%3 + (setA1 << 2));
 }
 
+void ControlChange(byte channel, byte control, byte value)
+{
+  lfoFrq = map(value, 0, 127, 0, 7);
+  if(lfoOn)
+  {
+    uint8_t lfo = (1 << 3) | lfoFrq;
+    ym2612.send(0x22, lfo);
+    Serial.println(lfoFrq);
+    if(lfoSens > 7)
+    {
+      Serial.println("LFO Sensitivity out of range! (Must be 0-7)");
+      return;
+    }
+    uint8_t lrAmsFms = 0xC0 + (3 << 4);
+    lrAmsFms |= lfoSens;
+    for(int a1 = 0; a1<=1; a1++)
+    {
+      for(int i=0; i<3; i++)
+      {
+        ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
+      }
+    }
+  }
+}
+
+void ToggleLFO()
+{
+  lfoOn = !lfoOn;
+  if(lfoOn)
+  {
+    uint8_t lfo = (1 << 3) | lfoFrq;
+    ym2612.send(0x22, lfo);
+
+    uint8_t lrAmsFms = 0xC0 + (3 << 4);
+    lrAmsFms |= lfoSens;
+    //This is a bulky way to do this, but it works so....
+    for(int a1 = 0; a1<=1; a1++)
+    {
+      for(int i=0; i<3; i++)
+      {
+        uint8_t AMD1R = a1 == true ? ym2612.shadowRegHigh[0x60 + i] : ym2612.shadowRegLow[0x60 + i];
+        AMD1R |= 1 << 7;
+        ym2612.send(0x60 + i, AMD1R, a1); 
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x64 + i] : ym2612.shadowRegLow[0x64 + i];
+        AMD1R |= 1 << 7;
+        ym2612.send(0x64 + i, AMD1R, a1);
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x68 + i] : ym2612.shadowRegLow[0x68 + i];
+        AMD1R |= 1 << 7;
+        ym2612.send(0x68 + i, AMD1R, a1); 
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x6C + i] : ym2612.shadowRegLow[0x6C + i];
+        AMD1R |= 1 << 7;
+        ym2612.send(0x6C + i, AMD1R, a1);
+        lrAmsFms = 0xC0 + (3 << 4);
+        lrAmsFms |= lfoSens;
+        ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
+      }
+    }
+  }
+  else
+  {
+    ym2612.send(0x22, 0x00); // LFO off
+    for(int a1 = 0; a1<=1; a1++)
+    {
+      for(int i=0; i<3; i++)
+      {
+        bool a1 = i > 2;
+        uint8_t AMD1R = a1 == true ? ym2612.shadowRegHigh[0x60 + i] : ym2612.shadowRegLow[0x60 + i];
+        AMD1R &= ~(1 << 7);
+        ym2612.send(0x60 + i, AMD1R, a1); 
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x64 + i] : ym2612.shadowRegLow[0x64 + i];
+        AMD1R &= ~(1 << 7);
+        ym2612.send(0x64 + i, AMD1R, a1);
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x68 + i] : ym2612.shadowRegLow[0x68 + i];
+        AMD1R &= ~(1 << 7);
+        ym2612.send(0x68 + i, AMD1R, a1); 
+        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x6C + i] : ym2612.shadowRegLow[0x6C + i];
+        AMD1R &= ~(1 << 7);
+        ym2612.send(0x6C + i, AMD1R, a1);
+
+        uint8_t lrAmsFms = 0xC0;
+        ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
+      }
+    }
+  }
+}
+
 uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
@@ -450,6 +561,12 @@ void HandleSerialIn()
       {
         Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
         DumpVoiceData(voices[currentProgram]);
+        return;
+      }
+      case 'l':
+      {
+        ToggleLFO();
+        Serial.print("LFO: "); Serial.println(lfoOn == true ? "ON": "OFF");
         return;
       }
       case '+': //Move up one voice in current OPM file
@@ -524,6 +641,7 @@ void HandleSerialIn()
 void loop() 
 {
   usbMIDI.read();
+
   if(Serial.available() > 0)
     HandleSerialIn();
   if(!digitalReadFast(PROG_UP))
