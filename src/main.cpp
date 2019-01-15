@@ -73,13 +73,11 @@ void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
-void DumpRegisterData(bool isHighReg);
 void ShiftOctaveUp();
 void ShiftOctaveDown();
 void SetFrequency(uint16_t f, uint8_t channel);
 void ToggleLFO();
 float NoteToFrequency(uint8_t note);
-
 
 
 float NoteToFrequency(uint8_t note)
@@ -239,18 +237,6 @@ void ReadVoiceData()
         break;
   }
   Serial.println("Done Reading Voice Data");
-}
-
-void DumpRegisterData(bool isHighReg)
-{
-  for(int i = 0; i< REG_COUNT; i++)
-  {
-    Serial.print(i, HEX); Serial.print(":     ");
-    if(isHighReg)
-      Serial.println(ym2612.shadowRegHigh[i], HEX);
-    else
-      Serial.println(ym2612.shadowRegLow[i], HEX);
-  }
 }
 
 void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM file
@@ -433,8 +419,9 @@ void KeyOn(byte channel, byte key, byte velocity)
 void KeyOff(byte channel, byte key, byte velocity)
 {
   uint8_t closedChannel = ym2612.SetChannelOff(key);
+  uint8_t offset = closedChannel % 3;
   bool setA1 = closedChannel > 2;
-  ym2612.send(0x28, 0x00 + closedChannel%3 + (setA1 << 2));
+  ym2612.send(0x28, 0x00 + offset + (setA1 << 2));
 }
 
 void ControlChange(byte channel, byte control, byte value)
@@ -470,27 +457,35 @@ void ToggleLFO()
   {
     uint8_t lfo = (1 << 3) | lfoFrq;
     ym2612.send(0x22, lfo);
-
-    uint8_t lrAmsFms = 0xC0 + (3 << 4);
-    lrAmsFms |= lfoSens;
     //This is a bulky way to do this, but it works so....
     for(int a1 = 0; a1<=1; a1++)
     {
       for(int i=0; i<3; i++)
       {
-        uint8_t AMD1R = a1 == true ? ym2612.shadowRegHigh[0x60 + i] : ym2612.shadowRegLow[0x60 + i];
+        Voice v = voices[currentProgram];
+        uint8_t AMD1R;
+
+        //Op. 1
+        AMD1R = (v.M1[10] << 7) | v.M1[1];
         AMD1R |= 1 << 7;
         ym2612.send(0x60 + i, AMD1R, a1); 
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x64 + i] : ym2612.shadowRegLow[0x64 + i];
+
+        //Op. 2
+        AMD1R = (v.C1[10] << 7) | v.C1[1];
         AMD1R |= 1 << 7;
-        ym2612.send(0x64 + i, AMD1R, a1);
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x68 + i] : ym2612.shadowRegLow[0x68 + i];
+        ym2612.send(0x64 + i, AMD1R, a1); 
+
+        //Op. 3
+        AMD1R = (v.M2[10] << 7) | v.M2[1];
         AMD1R |= 1 << 7;
         ym2612.send(0x68 + i, AMD1R, a1); 
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x6C + i] : ym2612.shadowRegLow[0x6C + i];
+
+        //Op. 4
+        AMD1R = (v.C2[10] << 7) | v.C2[1];
         AMD1R |= 1 << 7;
-        ym2612.send(0x6C + i, AMD1R, a1);
-        lrAmsFms = 0xC0 + (3 << 4);
+        ym2612.send(0x6C + i, AMD1R, a1); 
+
+        uint8_t lrAmsFms = 0xC0 + (3 << 4);
         lrAmsFms |= lfoSens;
         ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
       }
@@ -503,19 +498,28 @@ void ToggleLFO()
     {
       for(int i=0; i<3; i++)
       {
-        bool a1 = i > 2;
-        uint8_t AMD1R = a1 == true ? ym2612.shadowRegHigh[0x60 + i] : ym2612.shadowRegLow[0x60 + i];
+        Voice v = voices[currentProgram];
+        uint8_t AMD1R;
+
+        //Op. 1
+        AMD1R = (v.M1[10] << 7) | v.M1[1];
         AMD1R &= ~(1 << 7);
         ym2612.send(0x60 + i, AMD1R, a1); 
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x64 + i] : ym2612.shadowRegLow[0x64 + i];
+
+        //Op. 2
+        AMD1R = (v.C1[10] << 7) | v.C1[1];
         AMD1R &= ~(1 << 7);
-        ym2612.send(0x64 + i, AMD1R, a1);
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x68 + i] : ym2612.shadowRegLow[0x68 + i];
+        ym2612.send(0x64 + i, AMD1R, a1); 
+
+        //Op. 3
+        AMD1R = (v.M2[10] << 7) | v.M2[1];
         AMD1R &= ~(1 << 7);
         ym2612.send(0x68 + i, AMD1R, a1); 
-        AMD1R = a1 == true ? ym2612.shadowRegHigh[0x6C + i] : ym2612.shadowRegLow[0x6C + i];
+
+        //Op. 4
+        AMD1R = (v.C2[10] << 7) | v.C2[1];
         AMD1R &= ~(1 << 7);
-        ym2612.send(0x6C + i, AMD1R, a1);
+        ym2612.send(0x6C + i, AMD1R, a1); 
 
         uint8_t lrAmsFms = 0xC0;
         ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS

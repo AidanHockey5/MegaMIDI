@@ -17,7 +17,6 @@ void YM2612::Reset()
 
 void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
 {
-    setA1 == true ? shadowRegHigh[addr] = data : shadowRegLow[addr] = data;
     digitalWriteFast(_A1, setA1);
     digitalWriteFast(_A0, LOW);
     digitalWriteFast(_CS, LOW);
@@ -50,6 +49,7 @@ uint8_t YM2612::SetChannelOn(uint8_t key)
             channels[i].blockNumber = key/12;
             return i;
         }
+        
     }
     return 0xFF;
 }
