@@ -453,6 +453,8 @@ void ToggleLFO()
 {
   lfoOn = !lfoOn;
   Serial.print("LFO: "); Serial.println(lfoOn == true ? "ON": "OFF");
+  Voice v = voices[currentProgram];
+  uint8_t AMD1R;
   if(lfoOn)
   {
     uint8_t lfo = (1 << 3) | lfoFrq;
@@ -462,9 +464,6 @@ void ToggleLFO()
     {
       for(int i=0; i<3; i++)
       {
-        Voice v = voices[currentProgram];
-        uint8_t AMD1R;
-
         //Op. 1
         AMD1R = (v.M1[10] << 7) | v.M1[1];
         AMD1R |= 1 << 7;
@@ -498,9 +497,6 @@ void ToggleLFO()
     {
       for(int i=0; i<3; i++)
       {
-        Voice v = voices[currentProgram];
-        uint8_t AMD1R;
-
         //Op. 1
         AMD1R = (v.M1[10] << 7) | v.M1[1];
         AMD1R &= ~(1 << 7);
