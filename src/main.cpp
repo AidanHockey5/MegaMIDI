@@ -19,6 +19,7 @@
 //IO
 #define PROG_UP 16
 #define PROG_DOWN 15
+#define LFO_TOG 14
 
 //OPM File Format https://vgmrips.net/wiki/OPM_File_Format
 typedef struct
@@ -130,6 +131,7 @@ void setup()
   pinMode(DLED, OUTPUT);
   pinMode(PROG_UP, INPUT_PULLUP);
   pinMode(PROG_DOWN, INPUT_PULLUP);
+  pinMode(LFO_TOG, INPUT_PULLUP);
 
   if(!SD.begin(20, SPI_HALF_SPEED))
   {
@@ -463,6 +465,7 @@ void ControlChange(byte channel, byte control, byte value)
 void ToggleLFO()
 {
   lfoOn = !lfoOn;
+  Serial.print("LFO: "); Serial.println(lfoOn == true ? "ON": "OFF");
   if(lfoOn)
   {
     uint8_t lfo = (1 << 3) | lfoFrq;
@@ -566,7 +569,6 @@ void HandleSerialIn()
       case 'l':
       {
         ToggleLFO();
-        Serial.print("LFO: "); Serial.println(lfoOn == true ? "ON": "OFF");
         return;
       }
       case '+': //Move up one voice in current OPM file
@@ -652,6 +654,11 @@ void loop()
   if(!digitalReadFast(PROG_DOWN))
   {
     ProgramChange(0, currentProgram-1);
+    delay(200);
+  }
+  if(!digitalReadFast(LFO_TOG))
+  {
+    ToggleLFO();
     delay(200);
   }
 }
