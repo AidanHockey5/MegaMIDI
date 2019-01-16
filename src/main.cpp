@@ -22,7 +22,8 @@
 #define LFO_TOG 14
 
 //Music
-#define TUNE 3 //Adjust this to add or subtract semitones to the final note.
+#define SEMITONE_ADJ 3 //Adjust this to add or subtract semitones to the final note.
+#define TUNE -0.065     //Use this constant to tune your instrument!
 
 //OPM File Format https://vgmrips.net/wiki/OPM_File_Format
 typedef struct
@@ -36,8 +37,7 @@ typedef struct
 } Voice;
 
 //Clocks
-LTC6903 ymClock(24);
-uint32_t masterClockFrequency = 7670453; //7670453; //PAL 7600489 //NTSC 7670453
+uint32_t masterClockFrequency = 8000000;
 
 //Sound Chips
 YM2612 ym2612 = YM2612();
@@ -90,22 +90,17 @@ float NoteToFrequency(uint8_t note)
     const static float freq[12] = 
     {
       //You can create your own note frequencies here. C4#-C5. There should be twelve entries.
-
-      //A note set from my piano
-      //278.0, 294.7, 312.2, 331.3, 350.7, 371.5, 393.7, 417.0, 442.0, 468.0, 496.2, 525.5
-
-      //8MHz Tuned note set
-      //261.63f,   277.18f,   293.66f,   311.13f,   329.63f,   349.23f,   369.99f,   392.00f,   415.30f,   440.00f,   466.16f,   493.88f
-
       //YM3438 datasheet note set
       277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
+
     }; 
     const static float multiplier[] = 
     {
       0.03125f,   0.0625f,   0.125f,   0.25f,   0.5f,   1.0f,   2.0f,   4.0f,   8.0f,   16.0f,   32.0f 
     }; 
-    note += TUNE;
-    return freq[note%12]*multiplier[(note/12)+octaveShift];
+    note += SEMITONE_ADJ;
+    float f = freq[note%12];
+    return (f+(f*TUNE))*multiplier[(note/12)+octaveShift];
 }
 
 //Notes precalcuated, keeping here for people to reference it if they need it.
@@ -131,7 +126,6 @@ float NoteToFrequency(uint8_t note)
 
 void setup() 
 {
-  ymClock.SetFrequency(masterClockFrequency); //PAL 7600489 //NTSC 7670453
   ym2612.Reset();
   Serial.begin(115200);
   usbMIDI.setHandleNoteOn(KeyOn);
