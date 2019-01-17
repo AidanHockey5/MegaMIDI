@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "LTC6903.h"
 #include "YM2612.h"
+#include "SN76489.h"
 #include "SdFat.h"
 #include "usb_midi_serial.h"
 
@@ -13,17 +13,21 @@
 //----OR----
 //Use SERIAL_CONNECT.bat file found in the 'tools' folder of this repository.
 
-//DEBUG
-#define DLED 17
-
-//IO
-#define PROG_UP 16
-#define PROG_DOWN 15
-#define LFO_TOG 14
-
 //Music
 #define SEMITONE_ADJ 3 //Adjust this to add or subtract semitones to the final note.
 #define TUNE -0.065     //Use this constant to tune your instrument!
+
+//MIDI
+#define YM_CHANNEL 1
+#define PSG_CHANNEL 2
+
+//DEBUG
+#define DLED 8
+
+//IO
+#define PROG_UP 5
+#define PROG_DOWN 6
+#define LFO_TOG 7
 
 //OPM File Format https://vgmrips.net/wiki/OPM_File_Format
 typedef struct
@@ -40,6 +44,7 @@ typedef struct
 uint32_t masterClockFrequency = 8000000;
 
 //Sound Chips
+SN76489 sn76489 = SN76489();
 YM2612 ym2612 = YM2612();
 
 //SD Card
@@ -126,8 +131,10 @@ float NoteToFrequency(uint8_t note)
 
 void setup() 
 {
-  ym2612.Reset();
   Serial.begin(115200);
+  delay(20); //Wait for clocks to start
+  sn76489.Reset();
+  ym2612.Reset();
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
@@ -379,7 +386,7 @@ void SetVoice(Voice v)
 void PitchChange(byte channel, int pitch)
 {
   pitchBend = pitch;
-  for(int i = 0; i<MAX_CHANNELS; i++)
+  for(int i = 0; i<MAX_CHANNELS_YM; i++)
   {
     if(ym2612.channels[i].keyOn)
     {
@@ -407,28 +414,42 @@ void SetFrequency(uint16_t f, uint8_t channel)
 
 void KeyOn(byte channel, byte key, byte velocity)
 {
-  uint8_t openChannel = ym2612.SetChannelOn(key); 
-  uint8_t offset = openChannel % 3;
-  bool setA1 = openChannel > 2;
-  if(openChannel == 0xFF)
-    return;
-  if(pitchBend == 0)
-    SetFrequency(NoteToFrequency(key), openChannel);
-  else
+  if(channel == YM_CHANNEL)
   {
-    float freqFrom = NoteToFrequency(key-pitchBendRange);
-    float freqTo = NoteToFrequency(key+pitchBendRange);
-    SetFrequency(map(pitchBend, -8192, 8191, freqFrom, freqTo), openChannel);
+    uint8_t openChannel = ym2612.SetChannelOn(key); 
+    uint8_t offset = openChannel % 3;
+    bool setA1 = openChannel > 2;
+    if(openChannel == 0xFF)
+      return;
+    if(pitchBend == 0)
+      SetFrequency(NoteToFrequency(key), openChannel);
+    else
+    {
+      float freqFrom = NoteToFrequency(key-pitchBendRange);
+      float freqTo = NoteToFrequency(key+pitchBendRange);
+      SetFrequency(map(pitchBend, -8192, 8191, freqFrom, freqTo), openChannel);
+    }
+    ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));  
   }
-  ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));  
+  else if(channel == PSG_CHANNEL)
+  {
+    sn76489.SetChannelOn(key);
+  }
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  uint8_t closedChannel = ym2612.SetChannelOff(key);
-  uint8_t offset = closedChannel % 3;
-  bool setA1 = closedChannel > 2;
-  ym2612.send(0x28, 0x00 + offset + (setA1 << 2));
+  if(channel == YM_CHANNEL)
+  {
+    uint8_t closedChannel = ym2612.SetChannelOff(key);
+    uint8_t offset = closedChannel % 3;
+    bool setA1 = closedChannel > 2;
+    ym2612.send(0x28, 0x00 + offset + (setA1 << 2));
+  }
+  else if(channel == PSG_CHANNEL)
+  {
+    sn76489.SetChannelOff(key);
+  }
 }
 
 void ControlChange(byte channel, byte control, byte value)

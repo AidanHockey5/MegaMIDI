@@ -2,14 +2,7 @@
 #define YM2612_H_
 #include <Arduino.h>
 
-const int MAX_CHANNELS = 6;
-
-typedef struct
-{
-    bool keyOn = false;
-    uint8_t keyNumber = 0;
-    uint8_t blockNumber = 0;
-} Channel;
+const int MAX_CHANNELS_YM = 6;
 
 class YM2612
 {
@@ -20,9 +13,15 @@ private:
     uint8_t _RD = 41;
     uint8_t _A0 = 42;
     uint8_t _A1 = 43;
+    typedef struct
+    {
+        bool keyOn = false;
+        uint8_t keyNumber = 0;
+        uint8_t blockNumber = 0;
+    } Channel;
 public:
     YM2612();
-    Channel channels[MAX_CHANNELS];
+    Channel channels[MAX_CHANNELS_YM];
     uint8_t SetChannelOn(uint8_t key);
     uint8_t SetChannelOff(uint8_t key);
     void Reset();
@@ -31,7 +30,7 @@ public:
 #endif
 
 //Notes
-// DIGITAL BUS = PA0-PA7
+// DIGITAL BUS = PC0-PC7
 // IC = F0/38
 // CS = F1/39
 // WR = F2/40
