@@ -33,14 +33,6 @@ void SN76489::send(uint8_t data)
     digitalWriteFast(_WE, HIGH);
 }
 
-void SN76489::SetVolume(uint8_t channel, uint8_t volume)
-{
-    if(channel < 3)
-    {
-        send(LATCH_CMD | (channel << 5) | TYPE_VOL | (volume & 0b1111));
-    }
-}
-
 void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
 {
     bool updateAttenuationFlag;
@@ -105,23 +97,6 @@ void SN76489::UpdateAttenuation(uint8_t voice)
         return;
     attenuationValue = (127 - currentVelocity[voice]) >> 3;
     send(0x80 | attenuationRegister[voice] | attenuationValue);
-}
-
-uint16_t SN76489::GetFrequencyFromLUT(uint8_t key)
-{
-    if ( (key < LOWEST_NOTE) || (key > HIGHEST_NOTE) ) return 0x00;
-    return pgm_read_word(&G_notes[key]);
-}
-
-void SN76489::SetFrequency(uint8_t key, uint8_t channel)
-{
-    uint16_t frq;
-    if ( (key < LOWEST_NOTE) || (key > HIGHEST_NOTE) ) return;
-    frq =  GetFrequencyFromLUT(key);
-    send( LATCH_CMD | (channel << 5) | TYPE_TONE | (frq & 0b1111) );
-    if(frq > 0b1111)
-        send(DATA_CMD | (frq >> 4));
-    SetVolume(channel, VOL_MAX);
 }
 
 void SN76489::SetChannelOff(uint8_t key)

@@ -1,7 +1,9 @@
 #ifndef YM2612_H_
 #define YM2612_H_
 #include <Arduino.h>
-
+#include "Adjustments.h"
+#include "Voice.h"
+#define mask(s) (~(~0<<s))
 const int MAX_CHANNELS_YM = 6;
 
 class YM2612
@@ -19,11 +21,20 @@ private:
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
     } Channel;
+    uint8_t lfoOn = false;
+    uint8_t lfoFrq = 0;
+    uint8_t lfoSens = 7;
 public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];
-    uint8_t SetChannelOn(uint8_t key);
-    uint8_t SetChannelOff(uint8_t key);
+    void SetChannelOn(uint8_t key);
+    void SetChannelOff(uint8_t key);
+    void SetVoice(Voice v);
+    float NoteToFrequency(uint8_t note);
+    void SetFrequency(uint16_t f, uint8_t channel);
+    void AdjustLFO(uint8_t value);
+    void AdjustPitch(uint8_t channel, int pitch);
+    void ToggleLFO();
     void Reset();
     void send(unsigned char addr, unsigned char data, bool setA1=0);
 };
