@@ -405,12 +405,7 @@ void PitchChange(byte channel, int pitch)
     pitchBendPSG = pitch;
     for(int i = 0; i<MAX_CHANNELS_PSG; i++)
     {
-      if(sn76489.channels[i].keyOn)
-      {
-        uint16_t freqFrom = sn76489.GetFrequencyFromLUT(sn76489.channels[i].keyNumber-pitchBendPSGRange);
-        uint16_t freqTo = sn76489.GetFrequencyFromLUT(sn76489.channels[i].keyNumber+pitchBendPSGRange);
-        sn76489.SetFrequency(map(pitchBendPSG, -8192, 8191, freqFrom, freqTo), i);
-      }
+      sn76489.PitchChange(i, pitchBendPSG);
     }
   }
 }
@@ -451,7 +446,7 @@ void KeyOn(byte channel, byte key, byte velocity)
   }
   else if(channel == PSG_CHANNEL)
   {
-    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG);
+    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity);
   }
 }
 
