@@ -14,8 +14,9 @@
 //Use SERIAL_CONNECT.bat file found in the 'tools' folder of this repository.
 
 //Music
-#define SEMITONE_ADJ 3 //Adjust this to add or subtract semitones to the final note.
+#define SEMITONE_ADJ_YM 3 //Adjust this to add or subtract semitones to the final note on the YM2612.
 #define TUNE -0.065     //Use this constant to tune your instrument!
+#define SEMITONE_ADJ_PSG 3 //Adjust this to add or subtract semitones to the final note on the PSG.
 
 //MIDI
 #define YM_CHANNEL 1
@@ -103,7 +104,7 @@ float NoteToFrequency(uint8_t note)
     {
       0.03125f,   0.0625f,   0.125f,   0.25f,   0.5f,   1.0f,   2.0f,   4.0f,   8.0f,   16.0f,   32.0f 
     }; 
-    note += SEMITONE_ADJ;
+    note += SEMITONE_ADJ_YM;
     float f = freq[note%12];
     return (f+(f*TUNE))*multiplier[(note/12)+octaveShift];
 }
@@ -433,7 +434,7 @@ void KeyOn(byte channel, byte key, byte velocity)
   }
   else if(channel == PSG_CHANNEL)
   {
-    sn76489.SetChannelOn(key);
+    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG);
   }
 }
 
@@ -448,30 +449,32 @@ void KeyOff(byte channel, byte key, byte velocity)
   }
   else if(channel == PSG_CHANNEL)
   {
-    sn76489.SetChannelOff(key);
+    sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
   }
 }
 
 void ControlChange(byte channel, byte control, byte value)
 {
-  lfoFrq = map(value, 0, 127, 0, 7);
-  if(lfoOn)
+  if(control == 0x01)
   {
-    uint8_t lfo = (1 << 3) | lfoFrq;
-    ym2612.send(0x22, lfo);
-    Serial.println(lfoFrq);
-    if(lfoSens > 7)
+    lfoFrq = map(value, 0, 127, 0, 7);
+    if(lfoOn)
     {
-      Serial.println("LFO Sensitivity out of range! (Must be 0-7)");
-      return;
-    }
-    uint8_t lrAmsFms = 0xC0 + (3 << 4);
-    lrAmsFms |= lfoSens;
-    for(int a1 = 0; a1<=1; a1++)
-    {
-      for(int i=0; i<3; i++)
+      uint8_t lfo = (1 << 3) | lfoFrq;
+      ym2612.send(0x22, lfo);
+      if(lfoSens > 7)
       {
-        ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
+        Serial.println("LFO Sensitivity out of range! (Must be 0-7)");
+        return;
+      }
+      uint8_t lrAmsFms = 0xC0 + (3 << 4);
+      lrAmsFms |= lfoSens;
+      for(int a1 = 0; a1<=1; a1++)
+      {
+        for(int i=0; i<3; i++)
+        {
+          ym2612.send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
+        }
       }
     }
   }

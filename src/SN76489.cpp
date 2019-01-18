@@ -76,7 +76,6 @@ void SN76489::SetChannelOff(uint8_t key)
     {
         if(channels[i].keyNumber == key)
         {
-            //channels[i].keyNumber = 0;
             channels[i].keyOn = false;
             channel = i;
             break;
