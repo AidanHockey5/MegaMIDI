@@ -17,9 +17,11 @@ private:
 public:
     SN76489();
     Channel channels[MAX_CHANNELS_PSG];
+    uint16_t GetFrequencyFromLUT(uint8_t key);
     void SetChannelOn(uint8_t key);
     void SetChannelOff(uint8_t key);
     void SetVolume(uint8_t channel, uint8_t volume);
+    void SetFrequency(uint8_t key, uint8_t channel);
     void Reset();
     void send(uint8_t data);
 };

@@ -17,6 +17,10 @@
 #define SEMITONE_ADJ_YM 3 //Adjust this to add or subtract semitones to the final note on the YM2612.
 #define TUNE -0.065     //Use this constant to tune your instrument!
 #define SEMITONE_ADJ_PSG 3 //Adjust this to add or subtract semitones to the final note on the PSG.
+int16_t pitchBendYM = 0;
+uint8_t pitchBendYMRange = 2; //How many semitones would you like the pitch-bender to range? Standard = 2
+int16_t pitchBendPSG = 0;
+uint8_t pitchBendPSGRange = 2; 
 
 //MIDI
 #define YM_CHANNEL 1
@@ -55,9 +59,6 @@ File file;
 char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
-
-int16_t pitchBend = 0;
-uint8_t pitchBendRange = 2; //How many semitones would you like the pitch-bender to range? Standard = 2
 
 //Voice data
 #define MAX_VOICES 16
@@ -386,14 +387,30 @@ void SetVoice(Voice v)
 
 void PitchChange(byte channel, int pitch)
 {
-  pitchBend = pitch;
-  for(int i = 0; i<MAX_CHANNELS_YM; i++)
+  if(channel == YM_CHANNEL)
   {
-    if(ym2612.channels[i].keyOn)
+    pitchBendYM = pitch;
+    for(int i = 0; i<MAX_CHANNELS_YM; i++)
     {
-    float freqFrom = NoteToFrequency(ym2612.channels[i].keyNumber-pitchBendRange);
-    float freqTo = NoteToFrequency(ym2612.channels[i].keyNumber+pitchBendRange);
-    SetFrequency(map(pitchBend,-8192, 8191, freqFrom, freqTo), i);
+      if(ym2612.channels[i].keyOn)
+      {
+      float freqFrom = NoteToFrequency(ym2612.channels[i].keyNumber-pitchBendYMRange);
+      float freqTo = NoteToFrequency(ym2612.channels[i].keyNumber+pitchBendYMRange);
+      SetFrequency(map(pitchBendYM,-8192, 8191, freqFrom, freqTo), i);
+      }
+    }
+  }
+  else if(channel == PSG_CHANNEL)
+  {
+    pitchBendPSG = pitch;
+    for(int i = 0; i<MAX_CHANNELS_PSG; i++)
+    {
+      if(sn76489.channels[i].keyOn)
+      {
+        uint16_t freqFrom = sn76489.GetFrequencyFromLUT(sn76489.channels[i].keyNumber-pitchBendPSGRange);
+        uint16_t freqTo = sn76489.GetFrequencyFromLUT(sn76489.channels[i].keyNumber+pitchBendPSGRange);
+        sn76489.SetFrequency(map(pitchBendPSG, -8192, 8191, freqFrom, freqTo), i);
+      }
     }
   }
 }
@@ -422,13 +439,13 @@ void KeyOn(byte channel, byte key, byte velocity)
     bool setA1 = openChannel > 2;
     if(openChannel == 0xFF)
       return;
-    if(pitchBend == 0)
+    if(pitchBendYM == 0)
       SetFrequency(NoteToFrequency(key), openChannel);
     else
     {
-      float freqFrom = NoteToFrequency(key-pitchBendRange);
-      float freqTo = NoteToFrequency(key+pitchBendRange);
-      SetFrequency(map(pitchBend, -8192, 8191, freqFrom, freqTo), openChannel);
+      float freqFrom = NoteToFrequency(key-pitchBendYMRange);
+      float freqTo = NoteToFrequency(key+pitchBendYMRange);
+      SetFrequency(map(pitchBendYM, -8192, 8191, freqFrom, freqTo), openChannel);
     }
     ym2612.send(0x28, 0xF0 + offset + (setA1 << 2));  
   }
