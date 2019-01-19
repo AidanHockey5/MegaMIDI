@@ -27,7 +27,7 @@ private:
 public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];
-    void SetChannelOn(uint8_t key);
+    void SetChannelOn(uint8_t key, uint8_t velocity);
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
     float NoteToFrequency(uint8_t note);

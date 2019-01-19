@@ -244,7 +244,7 @@ void KeyOn(byte channel, byte key, byte velocity)
 {
   if(channel == YM_CHANNEL)
   {
-    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM);
+    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity);
   }
   else if(channel == PSG_CHANNEL)
   {
@@ -306,6 +306,7 @@ void ShiftOctaveDown()
 
 void HandleSerialIn()
 {
+  bool fileFound = false;
   while(Serial.available())
   {
     char serialCmd = Serial.read();
@@ -317,7 +318,7 @@ void HandleSerialIn()
         DumpVoiceData(voices[currentProgram]);
         return;
       }
-      case 'l':
+      case 'l': //Toggle the Low Frequency Oscillator
       {
         ym2612.ToggleLFO();
         return;
@@ -332,19 +333,31 @@ void HandleSerialIn()
         ProgramChange(YM_CHANNEL, currentProgram-1);
         return;
       }
-      case '>':
+      case '>': //Move the entire keyboard up one ocatave for the YM2612
       {
         ShiftOctaveUp();
         return;
       }
-      case '<':
+      case '<': //Move the entire keyboard down one ocatave for the YM2612
       {
         ShiftOctaveDown();
         return;
       }
-      case '?':
+      case '?': //List the currently loaded OPM file
       {
         Serial.println(fileName);
+        return;
+      }
+      case '!': //Reset the sound chips
+      {
+        ym2612.Reset();
+        sn76489.Reset();
+        ym2612.SetVoice(voices[currentProgram]);
+        return;
+      }
+      case 'v': //Toggle velocity sensitivity for the PSG
+      {
+        sn76489.ToggleVelocitySensitivity();
         return;
       }
       case 'r': //Request a new opm file. format:    r:myOpmFile.opm
@@ -352,7 +365,6 @@ void HandleSerialIn()
         String req = Serial.readString();
         req.remove(0, 1); //Remove colon character
         SD.vwd()->rewind();
-        bool fileFound = false;
         Serial.print("REQUEST: ");Serial.println(req);
         File nextFile;
         for(uint32_t i = 0; i<numberOfFiles; i++)
@@ -371,15 +383,15 @@ void HandleSerialIn()
             }
           }
           nextFile.close();
-          if(!fileFound)
-          {
-            Serial.println("Error: File not found.");
-            return;
-          }
       }
       break;
       default:
         continue;
+    }
+    if(!fileFound)
+    {
+      Serial.println("Error: File not found!");
+      return;
     }
     if(file.isOpen())
       file.close();

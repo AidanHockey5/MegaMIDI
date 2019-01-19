@@ -70,7 +70,7 @@ float YM2612::NoteToFrequency(uint8_t note)
     return (f+(f*TUNE))*multiplier[(note/12)+octaveShift];
 }
 
-void YM2612::SetChannelOn(uint8_t key)
+void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
 {
     uint8_t openChannel = 0xFF;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)

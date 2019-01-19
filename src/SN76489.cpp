@@ -53,11 +53,20 @@ void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
     if(channel < MAX_CHANNELS_PSG)
     {
         currentNote[channel] = key;
-        currentVelocity[channel] = velocity;
+        if(enablePSGVelocity)
+            currentVelocity[channel] = velocity;
+        else
+            currentVelocity[channel] = 127;
         updateAttenuationFlag = UpdateSquarePitch(channel);
         if (updateAttenuationFlag) 
             UpdateAttenuation(channel);
     }
+}
+
+void SN76489::ToggleVelocitySensitivity()
+{
+    enablePSGVelocity = !enablePSGVelocity;
+    Serial.print("PSG VELOCITY SENSITIVITY: "); Serial.println(enablePSGVelocity == true ? "ON" : "OFF");
 }
 
 void SN76489::PitchChange(uint8_t channel, int pitch)

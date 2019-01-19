@@ -1,6 +1,6 @@
 #ifndef VOICE_H_
 #define VOICE_H_
-#define MAX_VOICES 16
+#define MAX_VOICES 32
 
 //Voice data
 static unsigned char currentProgram = 0;
