@@ -331,6 +331,22 @@ void YM2612::ToggleLFO()
   }
 }
 
+void YM2612::ShiftOctaveUp()
+{
+  if(octaveShift == MAX_OCTAVE_SHIFT)
+    return;
+  octaveShift++;
+  Serial.print("Octave Shift Up: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+}
+
+void YM2612::ShiftOctaveDown()
+{
+  if(octaveShift == 0)
+    return;
+  octaveShift--;
+  Serial.print("Octave Shift Down: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+}
+
 uint16_t YM2612::CalcFNumber(float note)
 {
   const uint32_t clockFrq = 8000000;

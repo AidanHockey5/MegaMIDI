@@ -24,6 +24,7 @@ private:
     uint8_t lfoOn = false;
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
+    uint8_t octaveShift = 0;
 public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];
@@ -35,6 +36,8 @@ public:
     void AdjustLFO(uint8_t value);
     void AdjustPitch(uint8_t channel, int pitch);
     uint16_t CalcFNumber(float note);
+    void ShiftOctaveUp();
+    void ShiftOctaveDown();
     void ToggleLFO();
     void Reset();
     void send(unsigned char addr, unsigned char data, bool setA1=0);

@@ -54,8 +54,6 @@ void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
-void ShiftOctaveUp();
-void ShiftOctaveDown();
 
 void setup() 
 {
@@ -288,22 +286,6 @@ void ProgramChange(byte channel, byte program)
   }
 }
 
-void ShiftOctaveUp()
-{
-  if(octaveShift == MAX_OCTAVE_SHIFT)
-    return;
-  octaveShift++;
-  Serial.print("Octave Shift Up: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
-}
-
-void ShiftOctaveDown()
-{
-  if(octaveShift == 0)
-    return;
-  octaveShift--;
-  Serial.print("Octave Shift Down: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
-}
-
 void HandleSerialIn()
 {
   bool fileFound = false;
@@ -335,12 +317,12 @@ void HandleSerialIn()
       }
       case '>': //Move the entire keyboard up one ocatave for the YM2612
       {
-        ShiftOctaveUp();
+        ym2612.ShiftOctaveUp();
         return;
       }
       case '<': //Move the entire keyboard down one ocatave for the YM2612
       {
-        ShiftOctaveDown();
+        ym2612.ShiftOctaveDown();
         return;
       }
       case '?': //List the currently loaded OPM file
