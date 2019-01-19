@@ -430,26 +430,3 @@ void loop()
     delay(200);
   }
 }
-
-
-
-//Notes precalcuated, keeping here for people to reference it if they need it.
-//C4# to C5 
-// float notes[]
-// {
-//   277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9, 523.3
-// };
-// uint16_t fNumberNotes[12];
-// void GenerateNoteSet()
-// {
-//   for(int i = 0; i < 12; i++)
-//   {
-//     //YM3438 manual f-number formula
-//     //F-Number = (144 x fNote x 2^20 / fm) / 2^(B-1)
-//     //fNote = desired note frequency
-//     //fm = YM clock frequency
-//     //B = Block data, in this case, it's 4
-//     uint16_t F = (144*notes[i]*(pow(2, 20))/masterClockFrequency) / pow(2, 4-1);
-//     fNumberNotes[i] = F;
-//   }
-// }

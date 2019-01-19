@@ -36,16 +36,17 @@ void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
     digitalWriteFast(_A0, LOW);
 }
 
-void YM2612::SetFrequency(uint16_t f, uint8_t channel)
+void YM2612::SetFrequency(uint16_t frequency, uint8_t channel)
 {
   int block = 2;
+  
   uint16_t frq;
-  while(f >= 2048)
+  while(frequency >= 2048)
   {
-    f /= 2;
+    frequency /= 2;
     block++;
   }
-  frq = (uint16_t)f;
+  frq = (uint16_t)frequency;
   bool setA1 = channel > 2;
   send(0xA4 + channel%3, ((frq >> 8) & mask(3)) | ((block & mask(3)) << 3), setA1);
   send(0xA0 + channel%3, frq, setA1);
@@ -91,7 +92,9 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     if(openChannel == 0xFF)
       return;
     if(pitchBendYM == 0)
+    {
       SetFrequency(NoteToFrequency(key), openChannel);
+    }
     else
     {
       float freqFrom = NoteToFrequency(key-pitchBendYMRange);
@@ -142,10 +145,22 @@ void YM2612::SetVoice(Voice v)
           //Operator 1
           DT1MUL = (v.M1[8] << 4) | v.M1[7];
           TL = v.M1[5];
-          RSAR = (v.M1[7] << 6) | v.M1[0];
+          RSAR = (v.M1[6] << 6) | v.M1[0];
           AMD1R = (v.M1[10] << 7) | v.M1[1];
           D2R = v.M1[2];
           D1LRR = (v.M1[4] << 4) | v.M1[3];
+
+          // if(i == 0 && a1 == 0)
+          // {
+          // Serial.print("DT1MUL: "); Serial.println(DT1MUL, HEX);
+          // Serial.print("TL: "); Serial.println(TL, HEX);
+          // Serial.print("RSAR: "); Serial.println(RSAR, HEX);
+          // Serial.print("AMD1R: "); Serial.println(AMD1R, HEX);
+          // Serial.print("D2R: "); Serial.println(D2R, HEX);
+          // Serial.print("D1LRR: "); Serial.println(D1LRR, HEX);
+          // }
+
+
           send(0x30 + i, DT1MUL, a1); //DT1/Mul
           send(0x40 + i, TL, a1); //Total Level
           send(0x50 + i, RSAR, a1); //RS/AR
@@ -157,7 +172,7 @@ void YM2612::SetVoice(Voice v)
           //Operator 2
           DT1MUL = (v.C1[8] << 4) | v.C1[7];
           TL = v.C1[5];
-          RSAR = (v.C1[7] << 6) | v.C1[0];
+          RSAR = (v.C1[6] << 6) | v.C1[0];
           AMD1R = (v.C1[10] << 7) | v.C1[1];
           D2R = v.C1[2];
           D1LRR = (v.C1[4] << 4) | v.C1[3];
@@ -172,7 +187,7 @@ void YM2612::SetVoice(Voice v)
           //Operator 3
           DT1MUL = (v.M2[8] << 4) | v.M2[7];
           TL = v.M2[5];
-          RSAR = (v.M2[7] << 6) | v.M2[0];
+          RSAR = (v.M2[6] << 6) | v.M2[0];
           AMD1R = (v.M2[10] << 7) | v.M2[1];
           D2R = v.M2[2];
           D1LRR = (v.M2[4] << 4) | v.M2[3];
@@ -187,7 +202,7 @@ void YM2612::SetVoice(Voice v)
           //Operator 4
           DT1MUL = (v.C2[8] << 4) | v.C2[7];
           TL = v.C2[5];
-          RSAR = (v.C2[7] << 6) | v.C2[0];
+          RSAR = (v.C2[6] << 6) | v.C2[0];
           AMD1R = (v.C2[10] << 7) | v.C2[1];
           D2R = v.C2[2];
           D1LRR = (v.C2[4] << 4) | v.C2[3];
@@ -199,7 +214,7 @@ void YM2612::SetVoice(Voice v)
           send(0x8C + i, D1LRR, a1); //D1L/RR
           send(0x9C + i, 0x00, a1); //SSG EG
 
-          uint8_t FBALGO = (v.CH[1] << 3) | v.CH[3];
+          uint8_t FBALGO = (v.CH[1] << 3) | v.CH[2];
           send(0xB0 + i, FBALGO); // Ch FB/Algo
           send(0xB4 + i, 0xC0); // Both Spks on
 
@@ -314,6 +329,12 @@ void YM2612::ToggleLFO()
       }
     }
   }
+}
+
+uint16_t YM2612::CalcFNumber(float note)
+{
+  const uint32_t clockFrq = 8000000;
+  return (144*note*(pow(2, 20))/clockFrq) / pow(2, 4-1);
 }
 
 //Notes

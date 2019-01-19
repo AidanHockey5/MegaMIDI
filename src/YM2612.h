@@ -31,9 +31,10 @@ public:
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
     float NoteToFrequency(uint8_t note);
-    void SetFrequency(uint16_t f, uint8_t channel);
+    void SetFrequency(uint16_t frequency, uint8_t channel);
     void AdjustLFO(uint8_t value);
     void AdjustPitch(uint8_t channel, int pitch);
+    uint16_t CalcFNumber(float note);
     void ToggleLFO();
     void Reset();
     void send(unsigned char addr, unsigned char data, bool setA1=0);
