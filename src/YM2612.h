@@ -25,6 +25,7 @@ private:
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
     uint8_t octaveShift = 0;
+    Voice currentVoice;
 public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];

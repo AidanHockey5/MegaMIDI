@@ -125,6 +125,7 @@ void YM2612::SetChannelOff(uint8_t key)
 
 void YM2612::SetVoice(Voice v)
 {
+  currentVoice = v;
   bool resetLFO = lfoOn;
   if(lfoOn)
     ToggleLFO();
@@ -140,7 +141,7 @@ void YM2612::SetVoice(Voice v)
   {
     for(int i=0; i<3; i++)
     {
-          uint8_t DT1MUL, TL, RSAR, AMD1R, D2R, D1LRR;
+          uint8_t DT1MUL, TL, RSAR, AMD1R, D2R, D1LRR = 0;
 
           //Operator 1
           DT1MUL = (v.M1[8] << 4) | v.M1[7];
@@ -260,8 +261,8 @@ void YM2612::ToggleLFO()
 {
   lfoOn = !lfoOn;
   Serial.print("LFO: "); Serial.println(lfoOn == true ? "ON": "OFF");
-  Voice v = voices[currentProgram];
-  uint8_t AMD1R;
+  Voice v = currentVoice;
+  uint8_t AMD1R = 0;
   if(lfoOn)
   {
     uint8_t lfo = (1 << 3) | lfoFrq;
@@ -300,34 +301,9 @@ void YM2612::ToggleLFO()
   else
   {
     send(0x22, 0x00); // LFO off
-    for(int a1 = 0; a1<=1; a1++)
-    {
-      for(int i=0; i<3; i++)
-      {
-        //Op. 1
-        AMD1R = (v.M1[10] << 7) | v.M1[1];
-        AMD1R &= ~(1 << 7);
-        send(0x60 + i, AMD1R, a1); 
-
-        //Op. 2
-        AMD1R = (v.C1[10] << 7) | v.C1[1];
-        AMD1R &= ~(1 << 7);
-        send(0x64 + i, AMD1R, a1); 
-
-        //Op. 3
-        AMD1R = (v.M2[10] << 7) | v.M2[1];
-        AMD1R &= ~(1 << 7);
-        send(0x68 + i, AMD1R, a1); 
-
-        //Op. 4
-        AMD1R = (v.C2[10] << 7) | v.C2[1];
-        AMD1R &= ~(1 << 7);
-        send(0x6C + i, AMD1R, a1); 
-
-        uint8_t lrAmsFms = 0xC0;
-        send(0xB4 + i, lrAmsFms, a1); // Speaker and LMS
-      }
-    }
+    Reset();
+    delay(1);
+    SetVoice(v);
   }
 }
 
