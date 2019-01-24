@@ -13,6 +13,7 @@ void YM2612::Reset()
     digitalWriteFast(_IC, LOW);  //_IC HIGH
     delayMicroseconds(25);
     digitalWriteFast(_IC, HIGH); //_IC HIGH
+    delayMicroseconds(25);
 }
 
 void YM2612::send(unsigned char addr, unsigned char data, bool setA1)

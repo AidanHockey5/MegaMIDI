@@ -3,6 +3,7 @@
 #include "YM2612.h"
 #include "SN76489.h"
 #include "SdFat.h"
+#include <MIDI.h>
 #include "usb_midi_serial.h"
 
 
@@ -19,6 +20,8 @@
 //MIDI
 #define YM_CHANNEL 1
 #define PSG_CHANNEL 2
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
+
 
 //DEBUG
 #define DLED 8
@@ -58,6 +61,7 @@ void DumpVoiceData(Voice v);
 void setup() 
 {
   Serial.begin(115200);
+  MIDI.begin(MIDI_CHANNEL_OMNI);
   delay(20); //Wait for clocks to start
   sn76489.Reset();
   ym2612.Reset();
@@ -66,6 +70,13 @@ void setup()
   usbMIDI.setHandleProgramChange(ProgramChange);
   usbMIDI.setHandlePitchChange(PitchChange);
   usbMIDI.setHandleControlChange(ControlChange);
+
+  MIDI.setHandleNoteOn(KeyOn);
+  MIDI.setHandleNoteOff(KeyOff);
+  MIDI.setHandleProgramChange(ProgramChange);
+  MIDI.setHandlePitchBend(PitchChange);
+  MIDI.setHandleControlChange(ControlChange);
+
   pinMode(DLED, OUTPUT);
   pinMode(PROG_UP, INPUT_PULLUP);
   pinMode(PROG_DOWN, INPUT_PULLUP);
@@ -393,7 +404,8 @@ void HandleSerialIn()
 void loop() 
 {
   usbMIDI.read();
-
+  MIDI.read();
+  
   if(Serial.available() > 0)
     HandleSerialIn();
   if(!digitalReadFast(PROG_UP))
