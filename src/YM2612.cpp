@@ -255,6 +255,7 @@ void YM2612::AdjustPitch(uint8_t channel, int pitch)
 {
     float freqFrom = NoteToFrequency(channels[channel].keyNumber-pitchBendYMRange);
     float freqTo = NoteToFrequency(channels[channel].keyNumber+pitchBendYMRange);
+    pitchBendYM = pitch;
     SetFrequency(map(pitch,-8192, 8191, freqFrom, freqTo), channel);
 }
 
