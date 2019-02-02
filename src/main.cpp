@@ -4,6 +4,7 @@
 #include "SN76489.h"
 #include "SdFat.h"
 #include <MIDI.h>
+#include <Encoder.h>
 #include "usb_midi_serial.h"
 
 
@@ -22,7 +23,6 @@
 #define PSG_CHANNEL 2
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
-
 //DEBUG
 #define DLED 8
 
@@ -30,6 +30,9 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 #define PROG_UP 5
 #define PROG_DOWN 6
 #define LFO_TOG 7
+#define ENC_BTN 0
+Encoder encoder(18, 19);
+long encoderPos = 0;
 
 //Clocks
 uint32_t masterClockFrequency = 8000000;
@@ -57,6 +60,7 @@ void removeSVI();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
+void ResetSoundChips();
 
 void setup() 
 {
@@ -81,6 +85,9 @@ void setup()
   pinMode(PROG_UP, INPUT_PULLUP);
   pinMode(PROG_DOWN, INPUT_PULLUP);
   pinMode(LFO_TOG, INPUT_PULLUP);
+  pinMode(ENC_BTN, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(ENC_BTN), ResetSoundChips, FALLING);
 
   if(!SD.begin(20, SPI_HALF_SPEED))
   {
@@ -128,6 +135,14 @@ void removeSVI() //Sometimes, Windows likes to place invisible files in our SD c
   }
   SD.vwd()->rewind();
   nextFile.close();
+}
+
+void ResetSoundChips()
+{
+  ym2612.Reset();
+  sn76489.Reset();
+  ym2612.SetVoice(voices[currentProgram]);
+  Serial.println("Soundchips Reset");
 }
 
 void ReadVoiceData()
@@ -343,9 +358,7 @@ void HandleSerialIn()
       }
       case '!': //Reset the sound chips
       {
-        ym2612.Reset();
-        sn76489.Reset();
-        ym2612.SetVoice(voices[currentProgram]);
+        ResetSoundChips();
         return;
       }
       case 'v': //Toggle velocity sensitivity for the PSG
@@ -405,19 +418,23 @@ void loop()
 {
   usbMIDI.read();
   MIDI.read();
+  long enc = encoder.read();
+  if(enc != encoderPos && enc % 4 == 0) //Rotary encoders often have multiple steps between each descrete 'click.' In this case, it is 4
+  {
+    if(enc > encoderPos) //Encoder up
+    {
+      ProgramChange(YM_CHANNEL, currentProgram+1);
+    }
+    else if(enc < encoderPos) //Encoder down
+    {
+      ProgramChange(YM_CHANNEL, currentProgram-1);
+    }
+    encoderPos = enc;
+  }
   
   if(Serial.available() > 0)
     HandleSerialIn();
-  if(!digitalReadFast(PROG_UP))
-  {
-    ProgramChange(0, currentProgram+1);
-    delay(200);
-  }
-  if(!digitalReadFast(PROG_DOWN))
-  {
-    ProgramChange(0, currentProgram-1);
-    delay(200);
-  }
+
   if(!digitalReadFast(LFO_TOG))
   {
     ym2612.ToggleLFO();
