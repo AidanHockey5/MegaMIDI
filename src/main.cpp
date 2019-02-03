@@ -5,6 +5,8 @@
 #include "SdFat.h"
 #include <MIDI.h>
 #include <Encoder.h>
+#include <LiquidCrystal.h>
+#include "LCDChars.h"
 #include "usb_midi_serial.h"
 
 
@@ -26,13 +28,21 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 //DEBUG
 #define DLED 8
 
-//IO
+//INPUT
 #define PROG_UP 5
 #define PROG_DOWN 6
 #define LFO_TOG 7
 #define ENC_BTN 0
 Encoder encoder(18, 19);
 long encoderPos = 0;
+
+//LCD
+#define LCD_ROWS 4
+#define LCD_COLS 20
+uint16_t fileNameScrollIndex = 0;
+String fileScroll;
+uint8_t lcdSelectionIndex = 0;
+LiquidCrystal lcd(25, 26, 10, 11, 12, 13, 14, 15, 16, 17); //Same data bus as sound chips + PB5 & PB6
 
 //Clocks
 uint32_t masterClockFrequency = 8000000;
@@ -61,10 +71,17 @@ void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
 void ResetSoundChips();
+void HandleRotaryButtonDown();
+void HandleRotaryEncoder();
+void LCDInit();
+void ScrollFileNameLCD();
 
 void setup() 
 {
   Serial.begin(115200);
+  lcd.createChar(0, arrowCharLeft);
+  lcd.createChar(1, arrowCharRight);
+  lcd.begin(LCD_COLS, LCD_ROWS);
   MIDI.begin(MIDI_CHANNEL_OMNI);
   delay(20); //Wait for clocks to start
   sn76489.Reset();
@@ -87,7 +104,7 @@ void setup()
   pinMode(LFO_TOG, INPUT_PULLUP);
   pinMode(ENC_BTN, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(ENC_BTN), ResetSoundChips, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
 
   if(!SD.begin(20, SPI_HALF_SPEED))
   {
@@ -119,6 +136,7 @@ void setup()
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   DumpVoiceData(voices[0]);
+  LCDInit();
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -135,6 +153,38 @@ void removeSVI() //Sometimes, Windows likes to place invisible files in our SD c
   }
   SD.vwd()->rewind();
   nextFile.close();
+}
+
+void HandleRotaryButtonDown()
+{
+  lcd.setCursor(0, lcdSelectionIndex);
+  lcd.print(" ");
+  lcdSelectionIndex++;
+  lcdSelectionIndex %= 4;
+  lcd.setCursor(0, lcdSelectionIndex);
+  lcd.write((uint8_t)0); //Arrow Left
+}
+
+void LCDInit()
+{
+  lcd.clear();
+  lcd.home();
+  lcdSelectionIndex = 0;
+  lcd.setCursor(0, lcdSelectionIndex);
+  lcd.print(" ");
+  lcd.setCursor(0, lcdSelectionIndex);
+  lcd.write((uint8_t)0); //Arrow Left
+  lcd.setCursor(1, 0);
+  String fn = fileName;
+  fn = fn.remove(LCD_COLS-1);
+  //fileNameScrollIndex = LCD_COLS;
+  fileScroll = fileName;
+  lcd.print(fn);
+  lcd.setCursor(1, 1);
+  lcd.print("Voice # ");
+  lcd.print(currentProgram);
+  lcd.print("/");
+  lcd.print(maxValidVoices-1);
 }
 
 void ResetSoundChips()
@@ -302,9 +352,14 @@ void ProgramChange(byte channel, byte program)
   if(channel == YM_CHANNEL)
   {
     if(program == 255)
-      program = 0;
+      program = maxValidVoices-1;
     program %= maxValidVoices;
     currentProgram = program;
+    lcd.setCursor(1, 1);
+    lcd.print("Voice # ");
+    lcd.print(currentProgram);
+    lcd.print("/");
+    lcd.print(maxValidVoices-1);
     ym2612.SetVoice(voices[currentProgram]);
     Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
     DumpVoiceData(voices[currentProgram]);
@@ -411,6 +466,87 @@ void HandleSerialIn()
     ReadVoiceData();
     ym2612.SetVoice(voices[0]);
     currentProgram = 0;
+    LCDInit();
+  }
+}
+
+void HandleRotaryEncoder()
+{
+  long enc = encoder.read();
+  if(enc != encoderPos && enc % 4 == 0) //Rotary encoders often have multiple steps between each descrete 'click.' In this case, it is 4
+  {
+    bool isEncoderUp = enc > encoderPos;
+    switch(lcdSelectionIndex)
+    {
+      case 0:
+      {
+
+      break;
+      }
+      case 1:
+      {
+      ProgramChange(YM_CHANNEL, isEncoderUp ? currentProgram+1 : currentProgram-1);
+      break;
+      }
+      case 2:
+      {
+
+      break;
+      }
+      case 3:
+      {
+
+      break;
+      }
+    }
+    encoderPos = enc;
+  }
+}
+
+uint32_t prevMilli = 0;
+uint16_t scrollDelay = 500;
+void ScrollFileNameLCD()
+{
+  // if(lcdSelectionIndex != 0)
+  //   return;
+  if(strlen(fileName) <= LCD_COLS-1)
+    return;
+  uint32_t curMilli = millis();
+  if(curMilli - prevMilli >= scrollDelay)
+  {
+    prevMilli = curMilli;
+    //Clear top line
+    lcd.setCursor(0, 0);
+    lcd.println("");
+    lcd.setCursor(0, 0);
+
+    //Draw filename substring    
+    lcd.setCursor(1, 0);
+    String sbStr = fileScroll.substring(fileNameScrollIndex, fileNameScrollIndex+LCD_COLS-1);
+    fileNameScrollIndex++;
+    if(fileNameScrollIndex+(LCD_COLS-2) >= strlen(fileName))
+    {
+      fileNameScrollIndex = 0;
+      scrollDelay *= 5;
+    }
+    else
+      scrollDelay = 500;
+    lcd.print(sbStr);
+
+    //Redraw selection arrow
+    if(lcdSelectionIndex == 0)
+    {
+      lcd.setCursor(0, lcdSelectionIndex);
+      lcd.write(" ");
+      lcd.setCursor(0, lcdSelectionIndex);
+      lcd.write((uint8_t)0); //Arrow Left
+    }
+    else
+    {
+      lcd.setCursor(0,0);
+      lcd.write(" ");
+      lcd.setCursor(0,0);
+    }    
   }
 }
 
@@ -418,19 +554,8 @@ void loop()
 {
   usbMIDI.read();
   MIDI.read();
-  long enc = encoder.read();
-  if(enc != encoderPos && enc % 4 == 0) //Rotary encoders often have multiple steps between each descrete 'click.' In this case, it is 4
-  {
-    if(enc > encoderPos) //Encoder up
-    {
-      ProgramChange(YM_CHANNEL, currentProgram+1);
-    }
-    else if(enc < encoderPos) //Encoder down
-    {
-      ProgramChange(YM_CHANNEL, currentProgram-1);
-    }
-    encoderPos = enc;
-  }
+  HandleRotaryEncoder();
+  ScrollFileNameLCD();
   
   if(Serial.available() > 0)
     HandleSerialIn();
