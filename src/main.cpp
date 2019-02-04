@@ -54,6 +54,9 @@ YM2612 ym2612 = YM2612();
 //SD Card
 SdFat SD;
 File file;
+#define FIRST_FILE 0x00
+#define NEXT_FILE 0x01
+#define PREV_FILE 0x02
 #define MAX_FILE_NAME_SIZE 128
 char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
@@ -65,6 +68,8 @@ void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
 void PitchChange(byte channel, int pitch);
 void ControlChange(byte channel, byte control, byte value);
+bool LoadFile(byte strategy);
+bool LoadFile(String req);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
@@ -112,31 +117,147 @@ void setup()
     while(true){Serial.println("SD Mount failed!");}
   }
   removeSVI();
-
-  //Count total files
-  File countFile;
-  while ( countFile.openNext( SD.vwd(), O_READ ))
-  {
-    countFile.close();
-    numberOfFiles++;
-  }
-  countFile.close();
-  SD.vwd()->rewind();
-
-  if(file.isOpen())
-    file.close();
-  file.openNext(SD.vwd(), O_READ);
-  if(!file)
-  {
-    digitalWrite(DLED, HIGH);
-    while(true){Serial.println("File Read failed!");}
-  }
-  file.getName(fileName, MAX_FILE_NAME_SIZE);
-  Serial.println(fileName);
+  LoadFile(FIRST_FILE);
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   DumpVoiceData(voices[0]);
   LCDInit();
+}
+
+bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
+{
+  File nextFile;
+  memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+  switch(strategy)
+  {
+    case FIRST_FILE:
+    {
+      File countFile;
+      while ( countFile.openNext( SD.vwd(), O_READ ))
+      {
+        countFile.close();
+        numberOfFiles++;
+      }
+      countFile.close();
+      SD.vwd()->rewind();
+
+      if(file.isOpen())
+        file.close();
+      file.openNext(SD.vwd(), O_READ);
+      if(!file)
+      {
+        digitalWrite(DLED, HIGH);
+        while(true){Serial.println("File Read failed!");}
+      }
+      file.getName(fileName, MAX_FILE_NAME_SIZE);
+      Serial.println(fileName);
+      currentFileNumber = 0;
+      return true;
+    break;
+    }
+    case NEXT_FILE:
+    {
+      if(currentFileNumber+1 >= numberOfFiles)
+      {
+          SD.vwd()->rewind();
+          currentFileNumber = 0;
+      }
+      else
+          currentFileNumber++;
+      nextFile.openNext(SD.vwd(), O_READ);
+      nextFile.getName(fileName, MAX_FILE_NAME_SIZE);
+      nextFile.close();
+      break;
+    }
+    case PREV_FILE:
+    {
+      if(currentFileNumber != 0)
+      {
+        currentFileNumber--;
+        SD.vwd()->rewind();
+        for(uint32_t i = 0; i<=currentFileNumber; i++)
+        {
+          nextFile.close();
+          nextFile.openNext(SD.vwd(), O_READ);
+        }
+        nextFile.getName(fileName, MAX_FILE_NAME_SIZE);
+        nextFile.close();
+      }
+      else
+      {
+        currentFileNumber = numberOfFiles-1;
+        SD.vwd()->rewind();
+        for(uint32_t i = 0; i<=currentFileNumber; i++)
+        {
+          nextFile.close();
+          nextFile.openNext(SD.vwd(), O_READ);
+        }
+        nextFile.getName(fileName, MAX_FILE_NAME_SIZE);
+        nextFile.close();
+      }
+      break;
+    }
+  }
+  if(file.isOpen())
+    file.close();
+  file = SD.open(fileName, FILE_READ);
+  if(!file)
+  {
+    Serial.println("Failed to read file");
+    digitalWrite(DLED, HIGH);
+    while(true){}
+  }
+  ReadVoiceData();
+  ym2612.SetVoice(voices[0]);
+  currentProgram = 0;
+  LCDInit();
+  return true;
+}
+
+bool LoadFile(String req) //Request a file (string) to load
+{
+  bool fileFound = false;
+  char searchFn[MAX_FILE_NAME_SIZE];
+  SD.vwd()->rewind();
+  Serial.print("REQUEST: "); Serial.println(req);
+  File nextFile;
+  for(uint32_t i = 0; i<numberOfFiles; i++)
+  {
+    nextFile.close();
+    nextFile.openNext(SD.vwd(), O_READ);
+    nextFile.getName(searchFn, MAX_FILE_NAME_SIZE);
+    String tmpFN = String(searchFn);
+    tmpFN.trim();
+    req.trim();
+    if(tmpFN == req)
+    {
+      currentFileNumber = i;
+      fileFound = true;
+      break;
+    }
+  }
+  nextFile.close();
+  if(!fileFound)
+  {
+    Serial.println("Error: File not found!");
+    return false;
+  }
+  memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+  strncpy(fileName, searchFn, MAX_FILE_NAME_SIZE);
+  if(file.isOpen())
+    file.close();
+  file = SD.open(fileName, FILE_READ);
+  if(!file)
+  {
+    Serial.println("Failed to read file");
+    digitalWrite(DLED, HIGH);
+    while(true){}
+  }
+  ReadVoiceData();
+  ym2612.SetVoice(voices[0]);
+  currentProgram = 0;
+  LCDInit();
+  return true;
 }
 
 void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
@@ -177,14 +298,18 @@ void LCDInit()
   lcd.setCursor(1, 0);
   String fn = fileName;
   fn = fn.remove(LCD_COLS-1);
-  //fileNameScrollIndex = LCD_COLS;
   fileScroll = fileName;
   lcd.print(fn);
+  lcd.setCursor(1, 1);
+  lcd.print("                   ");
   lcd.setCursor(1, 1);
   lcd.print("Voice # ");
   lcd.print(currentProgram);
   lcd.print("/");
   lcd.print(maxValidVoices-1);
+  lcd.setCursor(1, 2);
+  lcd.print("LFO: ");
+  lcd.print(ym2612.lfoOn ? "ON" : "OFF");
 }
 
 void ResetSoundChips()
@@ -356,6 +481,8 @@ void ProgramChange(byte channel, byte program)
     program %= maxValidVoices;
     currentProgram = program;
     lcd.setCursor(1, 1);
+    lcd.print("                   ");
+    lcd.setCursor(1, 1);
     lcd.print("Voice # ");
     lcd.print(currentProgram);
     lcd.print("/");
@@ -369,7 +496,6 @@ void ProgramChange(byte channel, byte program)
 
 void HandleSerialIn()
 {
-  bool fileFound = false;
   while(Serial.available())
   {
     char serialCmd = Serial.read();
@@ -384,6 +510,11 @@ void HandleSerialIn()
       case 'l': //Toggle the Low Frequency Oscillator
       {
         ym2612.ToggleLFO();
+        lcd.setCursor(1, 2);
+        lcd.print("        ");
+        lcd.setCursor(1, 2);
+        lcd.print("LFO: ");
+        lcd.print(ym2612.lfoOn ? "ON" : "OFF");
         return;
       }
       case '+': //Move up one voice in current OPM file
@@ -425,48 +556,12 @@ void HandleSerialIn()
       {
         String req = Serial.readString();
         req.remove(0, 1); //Remove colon character
-        SD.vwd()->rewind();
-        Serial.print("REQUEST: ");Serial.println(req);
-        File nextFile;
-        for(uint32_t i = 0; i<numberOfFiles; i++)
-        {
-            nextFile.close();
-            nextFile.openNext(SD.vwd(), O_READ);
-            nextFile.getName(fileName, MAX_FILE_NAME_SIZE);
-            String tmpFN = String(fileName);
-            tmpFN.trim();
-            req.trim();
-            if(tmpFN == req)
-            {
-              currentFileNumber = i;
-              fileFound = true;
-              break;
-            }
-          }
-          nextFile.close();
+        LoadFile(req);
       }
       break;
       default:
         continue;
     }
-    if(!fileFound)
-    {
-      Serial.println("Error: File not found!");
-      return;
-    }
-    if(file.isOpen())
-      file.close();
-    file = SD.open(fileName, FILE_READ);
-    if(!file)
-    {
-      Serial.println("Failed to read file");
-      digitalWrite(DLED, HIGH);
-      while(true){}
-    }
-    ReadVoiceData();
-    ym2612.SetVoice(voices[0]);
-    currentProgram = 0;
-    LCDInit();
   }
 }
 
@@ -480,17 +575,23 @@ void HandleRotaryEncoder()
     {
       case 0:
       {
-
+        LoadFile(isEncoderUp ? NEXT_FILE : PREV_FILE);
+        LCDInit();
       break;
       }
       case 1:
       {
-      ProgramChange(YM_CHANNEL, isEncoderUp ? currentProgram+1 : currentProgram-1);
+        ProgramChange(YM_CHANNEL, isEncoderUp ? currentProgram+1 : currentProgram-1);
       break;
       }
       case 2:
       {
-
+        ym2612.ToggleLFO();
+        lcd.setCursor(1, 2);
+        lcd.print("        ");
+        lcd.setCursor(1, 2);
+        lcd.print("LFO: ");
+        lcd.print(ym2612.lfoOn ? "ON" : "OFF");
       break;
       }
       case 3:

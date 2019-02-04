@@ -21,7 +21,6 @@ private:
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
     } Channel;
-    uint8_t lfoOn = false;
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
     uint8_t octaveShift = 0;
@@ -29,6 +28,7 @@ private:
 public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];
+    bool lfoOn = false;
     void SetChannelOn(uint8_t key, uint8_t velocity);
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
