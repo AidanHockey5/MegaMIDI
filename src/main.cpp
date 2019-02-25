@@ -54,6 +54,7 @@ YM2612 ym2612 = YM2612();
 //SD Card
 SdFat SD;
 File file;
+#define SD_CHIP_SELECT SS //PB0 
 #define FIRST_FILE 0x00
 #define NEXT_FILE 0x01
 #define PREV_FILE 0x02
@@ -111,7 +112,7 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
 
-  if(!SD.begin(20, SPI_HALF_SPEED))
+  if(!SD.begin(SD_CHIP_SELECT, SPI_HALF_SPEED))
   {
     digitalWrite(DLED, HIGH);
     while(true){Serial.println("SD Mount failed!");}
