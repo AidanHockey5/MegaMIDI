@@ -1,3 +1,10 @@
+//AT90USB1286 Fuses
+//Extended: 0xF3
+//HIGH: 0xDF
+//LOW: 0x5E
+
+#define F_CPU 16000000UL
+
 #include <Arduino.h>
 #include "Voice.h"
 #include "YM2612.h"
@@ -50,6 +57,7 @@ uint32_t masterClockFrequency = 8000000;
 //Sound Chips
 SN76489 sn76489 = SN76489();
 YM2612 ym2612 = YM2612();
+#define PSG_READY 37
 
 //SD Card
 SdFat SD;
@@ -62,6 +70,9 @@ File file;
 char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
+
+//LEDs and Buttons
+uint8_t leds[] = {1, 3, 4, 5, 6, 7, 24, 27};
 
 //Prototypes
 void KeyOn(byte channel, byte key, byte velocity);
@@ -89,9 +100,11 @@ void setup()
   lcd.createChar(1, arrowCharRight);
   lcd.begin(LCD_COLS, LCD_ROWS);
   MIDI.begin(MIDI_CHANNEL_OMNI);
+
   delay(20); //Wait for clocks to start
   sn76489.Reset();
   ym2612.Reset();
+
   usbMIDI.setHandleNoteOn(KeyOn);
   usbMIDI.setHandleNoteOff(KeyOff);
   usbMIDI.setHandleProgramChange(ProgramChange);
@@ -109,6 +122,32 @@ void setup()
   pinMode(PROG_DOWN, INPUT_PULLUP);
   pinMode(LFO_TOG, INPUT_PULLUP);
   pinMode(ENC_BTN, INPUT_PULLUP);
+  pinMode(PSG_READY, INPUT);
+
+  MIDI.turnThruOff();
+  UCSR1B &= ~(1UL << 3); //Release the Hardware Serial1 TX pin from USART transmitter.
+
+  DDRA = 0x00;
+  PORTA = 0xFF;
+  for(int i = 0; i<8; i++)
+  {
+    pinMode(leds[i], OUTPUT);
+    digitalWrite(leds[i], LOW);
+  }
+
+  // while(true)
+  // {
+  //   for(int i = 0; i<8; i++)
+  //   {
+  //     digitalWrite(leds[i], HIGH);
+  //     delay(500);
+  //   }
+  //   for(int i = 0; i<8; i++)
+  //   {
+  //     digitalWrite(leds[i], LOW);
+  //     delay(500);
+  //   }
+  // }
 
   attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
 
@@ -661,10 +700,4 @@ void loop()
   
   if(Serial.available() > 0)
     HandleSerialIn();
-
-  if(!digitalReadFast(LFO_TOG))
-  {
-    ym2612.ToggleLFO();
-    delay(200);
-  }
 }
