@@ -307,6 +307,7 @@ void YM2612::ToggleLFO()
     delay(1);
     SetVoice(v);
   }
+  digitalWriteFast(leds[0], lfoOn);
 }
 
 void YM2612::ShiftOctaveUp()

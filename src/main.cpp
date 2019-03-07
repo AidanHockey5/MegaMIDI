@@ -13,6 +13,7 @@
 #include <MIDI.h>
 #include <Encoder.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 #include "LCDChars.h"
 #include "usb_midi_serial.h"
 
@@ -71,8 +72,8 @@ char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
 
-//LEDs and Buttons
-uint8_t leds[] = {1, 3, 4, 5, 6, 7, 24, 27};
+//Favorites
+uint8_t currentFavorite = 0xFF; //If favorite = 0xFF, go back to SD card voices
 
 //Prototypes
 void KeyOn(byte channel, byte key, byte velocity);
@@ -80,8 +81,12 @@ void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
 void PitchChange(byte channel, int pitch);
 void ControlChange(byte channel, byte control, byte value);
+void HandleFavoriteButtons(byte portValue);
 bool LoadFile(byte strategy);
+void BlinkLED(byte led);
 bool LoadFile(String req);
+void PutFavoriteIntoEEPROM(Voice v, uint16_t index);
+Voice GetFavoriteFromEEPROM(uint16_t index);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
@@ -92,6 +97,12 @@ void HandleRotaryButtonDown();
 void HandleRotaryEncoder();
 void LCDInit();
 void ScrollFileNameLCD();
+void IntroLEDs();
+void UpdateLEDs();
+void ProgramNewFavorite();
+
+
+
 
 void setup() 
 {
@@ -134,34 +145,62 @@ void setup()
     pinMode(leds[i], OUTPUT);
     digitalWrite(leds[i], LOW);
   }
-
-  // while(true)
-  // {
-  //   for(int i = 0; i<8; i++)
-  //   {
-  //     digitalWrite(leds[i], HIGH);
-  //     delay(500);
-  //   }
-  //   for(int i = 0; i<8; i++)
-  //   {
-  //     digitalWrite(leds[i], LOW);
-  //     delay(500);
-  //   }
-  // }
-
-  attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
+  IntroLEDs();
 
   if(!SD.begin(SD_CHIP_SELECT, SPI_HALF_SPEED))
   {
     digitalWrite(DLED, HIGH);
     while(true){Serial.println("SD Mount failed!");}
   }
+  attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
   removeSVI();
   LoadFile(FIRST_FILE);
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   DumpVoiceData(voices[0]);
   LCDInit();
+}
+
+void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
+{
+  if(index >= 7)
+    return;
+  FavoriteVoice fv;
+  fv.v = v;
+  fv.index = index;
+  EEPROM.put(sizeof(FavoriteVoice)*index, fv);
+}
+
+Voice GetFavoriteFromEEPROM(uint16_t index)
+{
+  if(index >= 7)
+    return voices[currentProgram];
+  FavoriteVoice fv;
+  EEPROM.get(sizeof(FavoriteVoice)*index, fv);
+  if(fv.index != index)
+  {
+    Serial.println("ERROR, index mismatch!");
+    Serial.print("Wanted: "); Serial.println(index, HEX);
+    Serial.print("Got: "); Serial.println(fv.index, HEX);
+    return voices[currentProgram];
+  }
+  return fv.v;
+}
+
+void IntroLEDs()
+{
+  int i = 0;
+  for(i=0; i<8; i++)
+  {
+    digitalWrite(leds[i], HIGH);
+    delay(100);
+  }
+
+  for(i=0; i<8; i++)
+  {
+    digitalWrite(leds[i], LOW);
+    delay(100);
+  }
 }
 
 bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
@@ -617,11 +656,15 @@ void HandleRotaryEncoder()
       {
         LoadFile(isEncoderUp ? NEXT_FILE : PREV_FILE);
         LCDInit();
+        currentFavorite = 0xFF;
+        UpdateLEDs();
       break;
       }
       case 1:
       {
         ProgramChange(YM_CHANNEL, isEncoderUp ? currentProgram+1 : currentProgram-1);
+        currentFavorite = 0xFF;
+        UpdateLEDs();
       break;
       }
       case 2:
@@ -691,6 +734,96 @@ void ScrollFileNameLCD()
   }
 }
 
+void UpdateLEDs()
+{
+  for(int i = 1; i<8; i++)
+      digitalWriteFast(leds[i], LOW);
+  if(currentFavorite >= 8)
+    return;
+  digitalWriteFast(leds[currentFavorite], HIGH);
+}
+
+void HandleFavoriteButtons(byte portValue)
+{
+  switch(portValue)
+  {
+    case 1: //LFO
+    ym2612.ToggleLFO();
+    break;
+    case 2: //Fav 1
+    currentFavorite != 1 ? currentFavorite = 1 : currentFavorite = 0xFF;
+    break;
+    case 4: //Fav 2
+    currentFavorite != 2 ? currentFavorite = 2 : currentFavorite = 0xFF;
+    break;
+    case 8: //Fav 3
+    currentFavorite != 3 ? currentFavorite = 3 : currentFavorite = 0xFF;
+    break;
+    case 16: //Fav 4
+    currentFavorite != 4 ? currentFavorite = 4 : currentFavorite = 0xFF;
+    break;
+    case 32: //Fav 5
+    currentFavorite != 5 ? currentFavorite = 5 : currentFavorite = 0xFF;
+    break;
+    case 64: //Fav 6
+    currentFavorite != 6 ? currentFavorite = 6 : currentFavorite = 0xFF;
+    break;
+    case 128: //Fav 7
+    currentFavorite != 7 ? currentFavorite = 7 : currentFavorite = 0xFF;
+    break;
+    default:
+    break;
+  }
+
+  UpdateLEDs();
+  uint32_t i = 0;
+  bool favoriteProgrammed = false;
+  while(PINA == portValue || PINA != 0xFF)
+  {
+    if(portValue != 1)
+    {
+      delay(1);
+      if(i >= 2000 && !favoriteProgrammed)
+      {
+        ProgramNewFavorite();
+        favoriteProgrammed = true;
+      }
+      i++;
+    }
+  } 
+  if(!favoriteProgrammed)
+  {
+    if(currentFavorite != 0xFF)
+      ym2612.SetVoice(GetFavoriteFromEEPROM(currentFavorite));
+    else
+      ym2612.SetVoice(voices[currentProgram]);
+  }
+  delay(50); //Debounce
+}
+
+void BlinkLED(byte led)
+{
+  if(led >= 8)
+    return;
+  for(int i = 0; i < 4; i++)
+  {
+    digitalWriteFast(leds[led], HIGH);
+    delay(100);
+    digitalWriteFast(leds[led], LOW);
+    delay(100);
+  }
+}
+
+void ProgramNewFavorite()
+{
+  if(currentFavorite == 0xFF)
+    return;
+  Serial.print("NEW FAVORITE: "); Serial.println(currentFavorite);
+  PutFavoriteIntoEEPROM(voices[currentProgram], currentFavorite);
+  BlinkLED(currentFavorite);
+  digitalWriteFast(leds[currentFavorite], HIGH);
+}
+
 void loop() 
 {
   usbMIDI.read();
@@ -700,4 +833,7 @@ void loop()
   
   if(Serial.available() > 0)
     HandleSerialIn();
+  byte portARead = ~PINA;
+  if(portARead)
+    HandleFavoriteButtons(portARead);
 }
