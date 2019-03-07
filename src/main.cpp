@@ -100,9 +100,7 @@ void ScrollFileNameLCD();
 void IntroLEDs();
 void UpdateLEDs();
 void ProgramNewFavorite();
-
-
-
+void SDReadFailure();
 
 void setup() 
 {
@@ -149,8 +147,8 @@ void setup()
 
   if(!SD.begin(SD_CHIP_SELECT, SPI_HALF_SPEED))
   {
-    digitalWrite(DLED, HIGH);
-    while(true){Serial.println("SD Mount failed!");}
+    Serial.println("SD Mount failed!");
+    SDReadFailure();
   }
   attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
   removeSVI();
@@ -225,8 +223,8 @@ bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
       file.openNext(SD.vwd(), O_READ);
       if(!file)
       {
-        digitalWrite(DLED, HIGH);
-        while(true){Serial.println("File Read failed!");}
+        Serial.println("File Read failed!");
+        SDReadFailure();
       }
       file.getName(fileName, MAX_FILE_NAME_SIZE);
       Serial.println(fileName);
@@ -283,14 +281,30 @@ bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
   if(!file)
   {
     Serial.println("Failed to read file");
-    digitalWrite(DLED, HIGH);
-    while(true){}
+    SDReadFailure();
   }
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   currentProgram = 0;
   LCDInit();
   return true;
+}
+
+void SDReadFailure()
+{
+  lcd.clear();
+  lcd.home();
+  lcd.print("SD card");
+  lcd.setCursor(0,1);
+  lcd.print("read failure!");
+  for(int i = 0; i<8; i++)
+  {
+    if(i%2==0)
+      digitalWrite(leds[i], HIGH);
+    else
+      digitalWrite(leds[i], LOW);
+  }
+  while(true){}
 }
 
 bool LoadFile(String req) //Request a file (string) to load
