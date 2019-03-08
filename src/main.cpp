@@ -84,6 +84,7 @@ void ControlChange(byte channel, byte control, byte value);
 void HandleFavoriteButtons(byte portValue);
 bool LoadFile(byte strategy);
 void BlinkLED(byte led);
+void ClearLCDLine(byte line);
 bool LoadFile(String req);
 void PutFavoriteIntoEEPROM(Voice v, uint16_t index);
 Voice GetFavoriteFromEEPROM(uint16_t index);
@@ -102,12 +103,23 @@ void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
 
+
 void setup() 
 {
   Serial.begin(115200);
   lcd.createChar(0, arrowCharLeft);
   lcd.createChar(1, arrowCharRight);
+  lcd.createChar(2, heartChar);
   lcd.begin(LCD_COLS, LCD_ROWS);
+
+  lcd.print("     Welcome To");
+  lcd.setCursor(0,1);
+  lcd.print("      MEGA MIDI");
+  lcd.setCursor(0,2);
+  lcd.print("   Aidan Lawrence");
+  lcd.setCursor(0,3);
+  lcd.print("        2019");
+
   MIDI.begin(MIDI_CHANNEL_OMNI);
 
   delay(20); //Wait for clocks to start
@@ -166,6 +178,9 @@ void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
   FavoriteVoice fv;
   fv.v = v;
   fv.index = index;
+  strncpy(fv.fileName, fileName, 20);
+  fv.fileName[20] = '\0';
+  fv.voiceNumber = currentProgram;
   EEPROM.put(sizeof(FavoriteVoice)*index, fv);
 }
 
@@ -180,8 +195,19 @@ Voice GetFavoriteFromEEPROM(uint16_t index)
     Serial.println("ERROR, index mismatch!");
     Serial.print("Wanted: "); Serial.println(index, HEX);
     Serial.print("Got: "); Serial.println(fv.index, HEX);
+    LCDInit();
+    lcd.setCursor(0, 2);
+    lcd.print("No favorite set");
+    lcd.setCursor(0,3);
+    lcd.print("Hold to set favorite");
     return voices[currentProgram];
   }
+  LCDInit();
+  lcd.setCursor(0, 2);
+  lcd.print(fv.fileName);
+  lcd.setCursor(0, 3);
+  lcd.print("Voice #:"); lcd.print(fv.voiceNumber); lcd.print("   "); lcd.write(2); lcd.print(currentFavorite);
+
   return fv.v;
 }
 
@@ -374,7 +400,7 @@ void HandleRotaryButtonDown()
   lcd.setCursor(0, lcdSelectionIndex);
   lcd.print(" ");
   lcdSelectionIndex++;
-  lcdSelectionIndex %= 4;
+  lcdSelectionIndex %= 2;
   lcd.setCursor(0, lcdSelectionIndex);
   lcd.write((uint8_t)0); //Arrow Left
 }
@@ -394,15 +420,12 @@ void LCDInit()
   fileScroll = fileName;
   lcd.print(fn);
   lcd.setCursor(1, 1);
-  lcd.print("                   ");
+  ClearLCDLine(1);
   lcd.setCursor(1, 1);
   lcd.print("Voice # ");
   lcd.print(currentProgram);
   lcd.print("/");
   lcd.print(maxValidVoices-1);
-  lcd.setCursor(1, 2);
-  lcd.print("LFO: ");
-  lcd.print(ym2612.lfoOn ? "ON" : "OFF");
 }
 
 void ResetSoundChips()
@@ -574,7 +597,7 @@ void ProgramChange(byte channel, byte program)
     program %= maxValidVoices;
     currentProgram = program;
     lcd.setCursor(1, 1);
-    lcd.print("                   ");
+    ClearLCDLine(1);
     lcd.setCursor(1, 1);
     lcd.print("Voice # ");
     lcd.print(currentProgram);
@@ -603,11 +626,6 @@ void HandleSerialIn()
       case 'l': //Toggle the Low Frequency Oscillator
       {
         ym2612.ToggleLFO();
-        lcd.setCursor(1, 2);
-        lcd.print("        ");
-        lcd.setCursor(1, 2);
-        lcd.print("LFO: ");
-        lcd.print(ym2612.lfoOn ? "ON" : "OFF");
         return;
       }
       case '+': //Move up one voice in current OPM file
@@ -681,21 +699,6 @@ void HandleRotaryEncoder()
         UpdateLEDs();
       break;
       }
-      case 2:
-      {
-        ym2612.ToggleLFO();
-        lcd.setCursor(1, 2);
-        lcd.print("        ");
-        lcd.setCursor(1, 2);
-        lcd.print("LFO: ");
-        lcd.print(ym2612.lfoOn ? "ON" : "OFF");
-      break;
-      }
-      case 3:
-      {
-
-      break;
-      }
     }
     encoderPos = enc;
   }
@@ -759,6 +762,7 @@ void UpdateLEDs()
 
 void HandleFavoriteButtons(byte portValue)
 {
+  uint8_t prevFavorite = currentFavorite;
   switch(portValue)
   {
     case 1: //LFO
@@ -799,6 +803,8 @@ void HandleFavoriteButtons(byte portValue)
       delay(1);
       if(i >= 2000 && !favoriteProgrammed)
       {
+        if(currentFavorite == 0xFF)
+          currentFavorite = prevFavorite;
         ProgramNewFavorite();
         favoriteProgrammed = true;
       }
@@ -828,11 +834,25 @@ void BlinkLED(byte led)
   }
 }
 
+void ClearLCDLine(byte line)
+{
+  if(line >= LCD_ROWS-1)
+    return;
+  lcd.setCursor(0, line);
+  for(int i=0; i<LCD_COLS; i++)
+  {}
+    lcd.write(' ');
+  lcd.setCursor(0, line);
+}
+
 void ProgramNewFavorite()
 {
   if(currentFavorite == 0xFF)
     return;
   Serial.print("NEW FAVORITE: "); Serial.println(currentFavorite);
+  LCDInit();
+  lcd.setCursor(0, 2);
+  lcd.print("New favorite set: "); lcd.print(currentFavorite);
   PutFavoriteIntoEEPROM(voices[currentProgram], currentFavorite);
   BlinkLED(currentFavorite);
   digitalWriteFast(leds[currentFavorite], HIGH);

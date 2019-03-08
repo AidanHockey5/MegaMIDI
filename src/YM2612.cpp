@@ -92,6 +92,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     bool setA1 = openChannel > 2;
     if(openChannel == 0xFF)
       return;
+    Serial.println(pitchBendYM);
     if(pitchBendYM == 0)
     {
       SetFrequency(NoteToFrequency(key), openChannel);
@@ -100,7 +101,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     {
       float freqFrom = NoteToFrequency(key-pitchBendYMRange);
       float freqTo = NoteToFrequency(key+pitchBendYMRange);
-      SetFrequency(map(pitchBendYM, -8192, 8191, freqFrom, freqTo), openChannel);
+      SetFrequency(map(pitchBendYM, -8192, 8192, freqFrom, freqTo), openChannel);
     }
     send(0x28, 0xF0 + offset + (setA1 << 2));  
 }
@@ -256,7 +257,7 @@ void YM2612::AdjustPitch(uint8_t channel, int pitch)
     float freqFrom = NoteToFrequency(channels[channel].keyNumber-pitchBendYMRange);
     float freqTo = NoteToFrequency(channels[channel].keyNumber+pitchBendYMRange);
     pitchBendYM = pitch;
-    SetFrequency(map(pitch,-8192, 8191, freqFrom, freqTo), channel);
+    SetFrequency(map(pitch,-8192, 8192, freqFrom, freqTo), channel);
 }
 
 void YM2612::ToggleLFO()

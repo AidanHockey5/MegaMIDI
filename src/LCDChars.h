@@ -25,4 +25,16 @@ const unsigned char arrowCharLeft[8] =
 	0b10000
 };
 
+const unsigned char heartChar[8] = 
+{
+  B00000,
+  B00000,
+  B01010,
+  B10101,
+  B10001,
+  B01010,
+  B00100,
+  B00000
+};
+
 #endif
