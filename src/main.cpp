@@ -186,7 +186,7 @@ void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
 
 Voice GetFavoriteFromEEPROM(uint16_t index)
 {
-  if(index >= 7)
+  if(index >= 8)
     return voices[currentProgram];
   FavoriteVoice fv;
   EEPROM.get(sizeof(FavoriteVoice)*index, fv);
@@ -597,8 +597,9 @@ void ProgramChange(byte channel, byte program)
     program %= maxValidVoices;
     currentProgram = program;
     lcd.setCursor(1, 1);
-    ClearLCDLine(1);
-    lcd.setCursor(1, 1);
+
+    lcd.setCursor(0, 1);
+    lcd.write((uint8_t)0); //Arrow Left
     lcd.print("Voice # ");
     lcd.print(currentProgram);
     lcd.print("/");
@@ -763,6 +764,7 @@ void UpdateLEDs()
 void HandleFavoriteButtons(byte portValue)
 {
   uint8_t prevFavorite = currentFavorite;
+  Serial.println(portValue, DEC);
   switch(portValue)
   {
     case 1: //LFO
@@ -793,7 +795,6 @@ void HandleFavoriteButtons(byte portValue)
     break;
   }
 
-  UpdateLEDs();
   uint32_t i = 0;
   bool favoriteProgrammed = false;
   while(PINA == portValue || PINA != 0xFF)
@@ -816,8 +817,12 @@ void HandleFavoriteButtons(byte portValue)
     if(currentFavorite != 0xFF)
       ym2612.SetVoice(GetFavoriteFromEEPROM(currentFavorite));
     else
+    {
       ym2612.SetVoice(voices[currentProgram]);
+      currentFavorite = 0xFF;
+    }
   }
+  UpdateLEDs();
   delay(50); //Debounce
 }
 
