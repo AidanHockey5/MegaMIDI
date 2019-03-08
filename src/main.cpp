@@ -764,7 +764,6 @@ void UpdateLEDs()
 void HandleFavoriteButtons(byte portValue)
 {
   uint8_t prevFavorite = currentFavorite;
-  Serial.println(portValue, DEC);
   switch(portValue)
   {
     case 1: //LFO
