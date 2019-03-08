@@ -92,7 +92,6 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     bool setA1 = openChannel > 2;
     if(openChannel == 0xFF)
       return;
-    Serial.println(pitchBendYM);
     if(pitchBendYM == 0)
     {
       SetFrequency(NoteToFrequency(key), openChannel);
