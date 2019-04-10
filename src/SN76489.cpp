@@ -2,10 +2,10 @@
 
 SN76489::SN76489()
 {
-    DDRC = 0xFF;
-    PORTC = 0x00;
     DDRF = 0xFF;
-    PORTF |= 0x02; //_WE HIGH
+    PORTF = 0x00;
+    pinMode(_WE, OUTPUT);
+    digitalWriteFast(_WE, HIGH);
 }
 
 void SN76489::Reset()
@@ -27,7 +27,7 @@ void SN76489::send(uint8_t data)
     //|0|0| |F0|F1|F2|F3|F4|F5|
 
     digitalWriteFast(_WE, HIGH);
-    PORTC = data;
+    PORTF = data;
     digitalWriteFast(_WE, LOW);
     delayMicroseconds(14);
     digitalWriteFast(_WE, HIGH);
@@ -129,5 +129,6 @@ void SN76489::SetChannelOff(uint8_t key)
 }
 
 //Notes
-// DIGITAL BUS = PC0-PC7
-// WE = F6/44
+// DIGITAL BUS = PF0-PF7
+// WE = PE4/36
+// RDY = PE5/37

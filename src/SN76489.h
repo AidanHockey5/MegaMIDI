@@ -9,7 +9,7 @@ const int MAX_CHANNELS_PSG = 3;
 class SN76489
 {
 private:
-    uint8_t _WE = 44;
+    uint8_t _WE = 36;
     typedef struct
     {
         bool keyOn = false;
@@ -38,5 +38,7 @@ public:
 };
 #endif
 
-//Notes:
-//PSG /WE on F6
+//Notes
+// DIGITAL BUS = PF0-PF7
+// WE = PE4/36
+// RDY = PE5/37

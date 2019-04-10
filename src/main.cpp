@@ -50,7 +50,7 @@ long encoderPos = 0;
 uint16_t fileNameScrollIndex = 0;
 String fileScroll;
 uint8_t lcdSelectionIndex = 0;
-LiquidCrystal lcd(25, 26, 10, 11, 12, 13, 14, 15, 16, 17); //Same data bus as sound chips + PB5 & PB6
+LiquidCrystal lcd(17, 26, 38, 39, 40, 41, 42, 43, 44, 45); //PC7 & PB6 + Same data bus as sound chips
 
 //Clocks
 uint32_t masterClockFrequency = 8000000;
@@ -106,6 +106,21 @@ void SDReadFailure();
 
 void setup() 
 {
+  //YM2612 and PSG Clock Generation
+  pinMode(25, OUTPUT);
+  pinMode(16, OUTPUT);
+  //8MHz on PB5 (YM2612)
+  // set up Timer 1
+  TCCR1A = bit (COM1A0);  // toggle OC1A on Compare Match
+  TCCR1B = bit (WGM12) | bit (CS10);   // CTC, no prescaling
+  OCR1A =  0; //Divide by 2
+
+  //4MHz on PC6 (PSG)
+  // set up Timer 3
+  TCCR3A = bit (COM3A0);  // toggle OC3A on Compare Match
+  TCCR3B = bit (WGM32) | bit (CS30);   // CTC, no prescaling
+  OCR3A =  1; //Divide by 4
+  
   Serial.begin(115200);
   lcd.createChar(0, arrowCharLeft);
   lcd.createChar(1, arrowCharRight);
@@ -426,6 +441,7 @@ void LCDInit()
   lcd.print(currentProgram);
   lcd.print("/");
   lcd.print(maxValidVoices-1);
+  lcd.print("  ");
 }
 
 void ResetSoundChips()

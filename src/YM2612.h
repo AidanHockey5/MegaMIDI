@@ -9,12 +9,12 @@ const int MAX_CHANNELS_YM = 6;
 class YM2612
 {
 private:
-    uint8_t _IC = 38;
-    uint8_t _CS = 39;
-    uint8_t _WR = 40;
-    uint8_t _RD = 41;
-    uint8_t _A0 = 42;
-    uint8_t _A1 = 43;
+    uint8_t _IC = 10;
+    uint8_t _CS = 11;
+    uint8_t _WR = 12;
+    uint8_t _RD = 13;
+    uint8_t _A0 = 14;
+    uint8_t _A1 = 15;
     typedef struct
     {
         bool keyOn = false;
@@ -46,10 +46,10 @@ public:
 #endif
 
 //Notes
-// DIGITAL BUS = PC0-PC7
-// IC = F0/38
-// CS = F1/39
-// WR = F2/40
-// RD = F3/41
-// A0 = F4/42
-// A1 = F5/43
+// DIGITAL BUS = PF0-PF7
+// IC = PC0/10
+// CS = PC1/11
+// WR = PC2/12
+// RD = PC3/13
+// A0 = PC4/14
+// A1 = PC5/15

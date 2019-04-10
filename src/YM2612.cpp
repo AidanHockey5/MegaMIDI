@@ -2,10 +2,10 @@
 
 YM2612::YM2612()
 {
-    DDRC = 0xFF;
-    PORTC = 0x00;
     DDRF = 0xFF;
-    PORTF |= 0x3C; //_A1 LOW, _A0 LOW, _IC HIGH, _WR HIGH, _RD HIGH, _CS HIGH
+    PORTF = 0x00;
+    DDRC = 0xFF;
+    PORTC |= 0x3C; //_A1 LOW, _A0 LOW, _IC HIGH, _WR HIGH, _RD HIGH, _CS HIGH
 }
 
 void YM2612::Reset()
@@ -21,14 +21,14 @@ void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
     digitalWriteFast(_A1, setA1);
     digitalWriteFast(_A0, LOW);
     digitalWriteFast(_CS, LOW);
-    PORTC = addr;
+    PORTF = addr;
     digitalWriteFast(_WR, LOW);
     delayMicroseconds(1);
     digitalWriteFast(_WR, HIGH);
     digitalWriteFast(_CS, HIGH);
     digitalWriteFast(_A0, HIGH);
     digitalWriteFast(_CS, LOW);
-    PORTC = data;
+    PORTF = data;
     digitalWriteFast(_WR, LOW);
     delayMicroseconds(1);
     digitalWriteFast(_WR, HIGH);
@@ -333,10 +333,10 @@ uint16_t YM2612::CalcFNumber(float note)
 }
 
 //Notes
-// DIGITAL BUS = PC0-PC7
-// IC = F0/38
-// CS = F1/39
-// WR = F2/40
-// RD = F3/41
-// A0 = F4/42
-// A1 = F5/43
+// DIGITAL BUS = PF0-PF7
+// IC = PC0/10
+// CS = PC1/11
+// WR = PC2/12
+// RD = PC3/13
+// A0 = PC4/14
+// A1 = PC5/15
