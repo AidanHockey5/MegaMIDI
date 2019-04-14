@@ -96,7 +96,7 @@ void DumpVoiceData(Voice v);
 void ResetSoundChips();
 void HandleRotaryButtonDown();
 void HandleRotaryEncoder();
-void LCDInit();
+void LCDInit(uint8_t graphicCursorPos = 0);
 void ScrollFileNameLCD();
 void IntroLEDs();
 void UpdateLEDs();
@@ -420,14 +420,14 @@ void HandleRotaryButtonDown()
   lcd.write((uint8_t)0); //Arrow Left
 }
 
-void LCDInit()
+void LCDInit(uint8_t graphicCursorPos)
 {
   lcd.clear();
   lcd.home();
-  lcdSelectionIndex = 0;
+  lcdSelectionIndex = graphicCursorPos;
   lcd.setCursor(0, lcdSelectionIndex);
   lcd.print(" ");
-  lcd.setCursor(0, lcdSelectionIndex);
+  lcd.setCursor(graphicCursorPos, lcdSelectionIndex);
   lcd.write((uint8_t)0); //Arrow Left
   lcd.setCursor(1, 0);
   String fn = fileName;
@@ -460,6 +460,7 @@ void ReadVoiceData()
   uint8_t vDataRaw[6][11];
   const size_t LINE_DIM = 60;
   char line[LINE_DIM];
+  bool foundNoName = false;
   while ((n = file.fgets(line, sizeof(line))) > 0) 
   {
       String l = line;
@@ -469,6 +470,7 @@ void ReadVoiceData()
       if(l.startsWith("@:"+String(voiceCount)+" no Name"))
       {
         maxValidVoices = voiceCount;
+        foundNoName = true;
         break;
       }
       else if(l.startsWith("@:"+String(voiceCount)))
@@ -509,6 +511,8 @@ void ReadVoiceData()
       if(voiceCount == MAX_VOICES-1)
         break;
   }
+  if(!foundNoName)
+    maxValidVoices = voiceCount;
   Serial.println("Done Reading Voice Data");
 }
 
@@ -612,6 +616,7 @@ void ProgramChange(byte channel, byte program)
       program = maxValidVoices-1;
     program %= maxValidVoices;
     currentProgram = program;
+    LCDInit(1);
     lcd.setCursor(1, 1);
 
     lcd.setCursor(0, 1);
