@@ -3,6 +3,8 @@
 //HIGH: 0xDF
 //LOW: 0x5E
 
+#define FW_VERSION "1.0_a"
+
 #define F_CPU 16000000UL
 
 #include <Arduino.h>
@@ -133,7 +135,8 @@ void setup()
   lcd.setCursor(0,2);
   lcd.print("   Aidan Lawrence");
   lcd.setCursor(0,3);
-  lcd.print("        2019");
+  lcd.print("        2019  ");
+  lcd.print(FW_VERSION);
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
 
@@ -690,6 +693,12 @@ void HandleSerialIn()
         String req = Serial.readString();
         req.remove(0, 1); //Remove colon character
         LoadFile(req);
+      }
+      break;
+      case 'd': //Dump YM2612 shadow registers
+      {
+        ym2612.DumpShadowRegisters();
+        return;
       }
       break;
       default:

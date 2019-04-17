@@ -24,6 +24,8 @@ private:
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
     uint8_t octaveShift = 0;
+    unsigned char bank0[0xB7-0x21]; //Shadow registers
+    unsigned char bank1[0xB7-0x30];
     Voice currentVoice;
 public:
     YM2612();
@@ -42,6 +44,7 @@ public:
     void ToggleLFO();
     void Reset();
     void send(unsigned char addr, unsigned char data, bool setA1=0);
+    void DumpShadowRegisters();
 };
 #endif
 

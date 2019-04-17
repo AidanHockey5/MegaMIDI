@@ -1,11 +1,14 @@
 #include "YM2612.h"
 
+
 YM2612::YM2612()
 {
     DDRF = 0xFF;
     PORTF = 0x00;
     DDRC = 0xFF;
     PORTC |= 0x3C; //_A1 LOW, _A0 LOW, _IC HIGH, _WR HIGH, _RD HIGH, _CS HIGH
+    memset(bank0, 0, sizeof bank0); //Reset shadow registers
+    memset(bank1, 0, sizeof bank1);
 }
 
 void YM2612::Reset()
@@ -16,8 +19,68 @@ void YM2612::Reset()
     delayMicroseconds(25);
 }
 
+void YM2612::DumpShadowRegisters()
+{
+  int line = 0x21;
+  Serial.println("--------GLOBAL BANK--------");
+  for(int i = 0; i < 0x30-0x21; i++)
+  {
+    if(i % 8 == 0)
+    {
+      if(i!=0)Serial.println();
+      Serial.print("0x"); Serial.print(line, HEX); Serial.print(": ");
+      line+=8;
+    }
+    if(bank0[i] < 16)
+      Serial.print("0");
+    Serial.print(bank0[i], HEX); Serial.print(" ");
+  }
+  Serial.println(); Serial.println();
+
+  line = 0x30;
+  Serial.println("--------BANK 0--------");
+  for(int i = 0; i < 0xB7-0x30; i++)
+  {
+    if(i % 8 == 0)
+    {
+      Serial.println();
+      Serial.print("0x"); Serial.print(line, HEX); Serial.print(": ");
+      line+=8;
+    }
+    if(bank0[i+0x0F] < 16)
+      Serial.print("0");
+    Serial.print(bank0[i+0x0F], HEX); Serial.print(" ");
+  }
+  Serial.println(); Serial.println();
+
+  line = 0x30;
+  Serial.println("--------BANK 1--------");
+  for(int i = 0; i < 0xB7-0x30; i++)
+  {
+    if(i % 8 == 0)
+    {
+      if(i!=0)Serial.println();
+      Serial.print("0x"); Serial.print(line, HEX); Serial.print(": ");
+      line+=8;
+    }
+    if(bank1[i] < 16)
+      Serial.print("0");
+    Serial.print(bank1[i], HEX); Serial.print(" ");
+  }
+}
+
 void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
 {
+    //Store in shadow registers to keep track of written values
+    if(setA1)
+    {
+      bank1[addr-0x30] = data;
+    }
+    else
+    {
+      bank0[addr-0x21] = data;
+    }
+    
     digitalWriteFast(_A1, setA1);
     digitalWriteFast(_A0, LOW);
     digitalWriteFast(_CS, LOW);
@@ -33,7 +96,6 @@ void YM2612::send(unsigned char addr, unsigned char data, bool setA1)
     delayMicroseconds(1);
     digitalWriteFast(_WR, HIGH);
     digitalWriteFast(_CS, HIGH);
-    digitalWriteFast(_A1, LOW);
     digitalWriteFast(_A0, LOW);
 }
 
@@ -49,6 +111,16 @@ void YM2612::SetFrequency(uint16_t frequency, uint8_t channel)
   }
   frq = (uint16_t)frequency;
   bool setA1 = channel > 2;
+
+  // unsigned char f1 = ((frq >> 8) & mask(3)) | ((block & mask(3)) << 3);
+  // unsigned char f2 = frq;
+  // Serial.println("-------");
+  // Serial.print("0xA4: "); Serial.println(f1, HEX);
+  // Serial.print("0xA0: "); Serial.println(f2, HEX);
+  // Serial.print("A1 SET: "); Serial.println(setA1 ? "TRUE" : "FALSE");
+  // Serial.println(0xA4+channel%3, HEX);
+  // Serial.println("-------");
+
   send(0xA4 + channel%3, ((frq >> 8) & mask(3)) | ((block & mask(3)) << 3), setA1);
   send(0xA0 + channel%3, frq, setA1);
 }
@@ -103,6 +175,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
       SetFrequency(map(pitchBendYM, -8192, 8192, freqFrom, freqTo), openChannel);
     }
     send(0x28, 0xF0 + offset + (setA1 << 2));  
+
 }
 
 void YM2612::SetChannelOff(uint8_t key)
@@ -132,10 +205,7 @@ void YM2612::SetVoice(Voice v)
     ToggleLFO();
   send(0x22, 0x00); // LFO off
   send(0x27, 0x00); // CH3 Normal
-  for(int i = 0; i<7; i++) //Turn off all channels
-  {
-    send(0x28, i);
-  }
+  send(0x28, 0x00); // Turn off all channels
   send(0x2B, 0x00); // DAC off
 
   for(int a1 = 0; a1<=1; a1++)
@@ -154,6 +224,7 @@ void YM2612::SetVoice(Voice v)
 
           // if(i == 0 && a1 == 0)
           // {
+          // Serial.println("-----OPERATOR 1, A0-----");
           // Serial.print("DT1MUL: "); Serial.println(DT1MUL, HEX);
           // Serial.print("TL: "); Serial.println(TL, HEX);
           // Serial.print("RSAR: "); Serial.println(RSAR, HEX);
@@ -162,6 +233,17 @@ void YM2612::SetVoice(Voice v)
           // Serial.print("D1LRR: "); Serial.println(D1LRR, HEX);
           // }
 
+          // Serial.println();
+          // if(i == 0 && a1 == 1)
+          // {
+          // Serial.println("-----OPERATOR 1, A1-----");
+          // Serial.print("DT1MUL: "); Serial.println(DT1MUL, HEX);
+          // Serial.print("TL: "); Serial.println(TL, HEX);
+          // Serial.print("RSAR: "); Serial.println(RSAR, HEX);
+          // Serial.print("AMD1R: "); Serial.println(AMD1R, HEX);
+          // Serial.print("D2R: "); Serial.println(D2R, HEX);
+          // Serial.print("D1LRR: "); Serial.println(D1LRR, HEX);
+          // }
 
           send(0x30 + i, DT1MUL, a1); //DT1/Mul
           send(0x40 + i, TL, a1); //Total Level
@@ -217,8 +299,8 @@ void YM2612::SetVoice(Voice v)
           send(0x9C + i, 0x00, a1); //SSG EG
 
           uint8_t FBALGO = (v.CH[1] << 3) | v.CH[2];
-          send(0xB0 + i, FBALGO); // Ch FB/Algo
-          send(0xB4 + i, 0xC0); // Both Spks on
+          send(0xB0 + i, FBALGO, a1); // Ch FB/Algo
+          send(0xB4 + i, 0xC0, a1); // Both Spks on
 
           send(0x28, 0x00 + i + (a1 << 2)); //Keys off
     }
@@ -340,3 +422,108 @@ uint16_t YM2612::CalcFNumber(float note)
 // RD = PC3/13
 // A0 = PC4/14
 // A1 = PC5/15
+
+
+
+
+
+  //TEST PIANO VOICE
+  // for(int a1 = 0; a1<=1; a1++)
+  // {
+  //   for(int i=0; i<3; i++)
+  //   {
+  //         uint8_t DT1MUL, TL, RSAR, AMD1R, D2R, D1LRR = 0;
+
+  //         //Operator 1
+  //         DT1MUL = (v.M1[8] << 4) | v.M1[7];
+  //         TL = v.M1[5];
+  //         RSAR = (v.M1[6] << 6) | v.M1[0];
+  //         AMD1R = (v.M1[10] << 7) | v.M1[1];
+  //         D2R = v.M1[2];
+  //         D1LRR = (v.M1[4] << 4) | v.M1[3];
+
+  //         // if(i == 0 && a1 == 0)
+  //         // {
+  //         // Serial.println("OPERATOR 1, A0");
+  //         // Serial.print("DT1MUL: "); Serial.println(DT1MUL, HEX);
+  //         // Serial.print("TL: "); Serial.println(TL, HEX);
+  //         // Serial.print("RSAR: "); Serial.println(RSAR, HEX);
+  //         // Serial.print("AMD1R: "); Serial.println(AMD1R, HEX);
+  //         // Serial.print("D2R: "); Serial.println(D2R, HEX);
+  //         // Serial.print("D1LRR: "); Serial.println(D1LRR, HEX);
+  //         // }
+
+  //         // if(i == 0 && a1 == 1)
+  //         // {
+  //         // Serial.println("OPERATOR 1, A1");
+  //         // Serial.print("DT1MUL: "); Serial.println(DT1MUL, HEX);
+  //         // Serial.print("TL: "); Serial.println(TL, HEX);
+  //         // Serial.print("RSAR: "); Serial.println(RSAR, HEX);
+  //         // Serial.print("AMD1R: "); Serial.println(AMD1R, HEX);
+  //         // Serial.print("D2R: "); Serial.println(D2R, HEX);
+  //         // Serial.print("D1LRR: "); Serial.println(D1LRR, HEX);
+  //         // }
+
+
+  //         send(0x30 + i, 0x71, a1); //DT1/Mul
+  //         send(0x40 + i, 0x23, a1); //Total Level
+  //         send(0x50 + i, 0x5F, a1); //RS/AR
+  //         send(0x60 + i, 0x05, a1); //AM/D1R
+  //         send(0x70 + i, 0x02, a1); //D2R
+  //         send(0x80 + i, 0x11, a1); //D1L/RR
+  //         send(0x90 + i, 0x00, a1); //SSG EG
+          
+  //         //Operator 2
+  //         DT1MUL = (v.C1[8] << 4) | v.C1[7];
+  //         TL = v.C1[5];
+  //         RSAR = (v.C1[6] << 6) | v.C1[0];
+  //         AMD1R = (v.C1[10] << 7) | v.C1[1];
+  //         D2R = v.C1[2];
+  //         D1LRR = (v.C1[4] << 4) | v.C1[3];
+  //         send(0x34 + i, 0x0D, a1); //DT1/Mul
+  //         send(0x44 + i, 0x2D, a1); //Total Level
+  //         send(0x54 + i, 0x99, a1); //RS/AR
+  //         send(0x64 + i, 0x05, a1); //AM/D1R
+  //         send(0x74 + i, 0x02, a1); //D2R
+  //         send(0x84 + i, 0x11, a1); //D1L/RR
+  //         send(0x94 + i, 0x00, a1); //SSG EG
+           
+  //         //Operator 3
+  //         DT1MUL = (v.M2[8] << 4) | v.M2[7];
+  //         TL = v.M2[5];
+  //         RSAR = (v.M2[6] << 6) | v.M2[0];
+  //         AMD1R = (v.M2[10] << 7) | v.M2[1];
+  //         D2R = v.M2[2];
+  //         D1LRR = (v.M2[4] << 4) | v.M2[3];
+  //         send(0x38 + i, 0x33, a1); //DT1/Mul
+  //         send(0x48 + i, 0x26, a1); //Total Level
+  //         send(0x58 + i, 0x5F, a1); //RS/AR
+  //         send(0x68 + i, 0x05, a1); //AM/D1R
+  //         send(0x78 + i, 0x02, a1); //D2R
+  //         send(0x88 + i, 0x11, a1); //D1L/RR
+  //         send(0x98 + i, 0x00, a1); //SSG EG
+                   
+  //         //Operator 4
+  //         DT1MUL = (v.C2[8] << 4) | v.C2[7];
+  //         TL = v.C2[5];
+  //         RSAR = (v.C2[6] << 6) | v.C2[0];
+  //         AMD1R = (v.C2[10] << 7) | v.C2[1];
+  //         D2R = v.C2[2];
+  //         D1LRR = (v.C2[4] << 4) | v.C2[3];
+  //         send(0x3C + i, 0x01, a1); //DT1/Mul
+  //         send(0x4C + i, 0x00, a1); //Total Level
+  //         send(0x5C + i, 0x94, a1); //RS/AR
+  //         send(0x6C + i, 0x07, a1); //AM/D1R
+  //         send(0x7C + i, 0x02, a1); //D2R
+  //         send(0x8C + i, 0xA6, a1); //D1L/RR
+  //         send(0x9C + i, 0x00, a1); //SSG EG
+
+  //         uint8_t FBALGO = (v.CH[1] << 3) | v.CH[2];
+  //         send(0xB0 + i, 0x32); // Ch FB/Algo
+  //         send(0xB4 + i, 0xC0); // Both Spks on
+
+  //         send(0x28, 0x00 + i + (a1 << 2)); //Keys off
+  //   }
+  // }
+  // if(resetLFO)
+  //   ToggleLFO();
