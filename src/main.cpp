@@ -98,7 +98,7 @@ void DumpVoiceData(Voice v);
 void ResetSoundChips();
 void HandleRotaryButtonDown();
 void HandleRotaryEncoder();
-void LCDInit(uint8_t graphicCursorPos = 0);
+void LCDRedraw(uint8_t graphicCursorPos = 0);
 void ScrollFileNameLCD();
 void IntroLEDs();
 void UpdateLEDs();
@@ -186,7 +186,7 @@ void setup()
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   DumpVoiceData(voices[0]);
-  LCDInit();
+  LCDRedraw();
 }
 
 void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
@@ -199,6 +199,7 @@ void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
   strncpy(fv.fileName, fileName, 20);
   fv.fileName[20] = '\0';
   fv.voiceNumber = currentProgram;
+  fv.octaveShift = ym2612.GetOctaveShift();
   EEPROM.put(sizeof(FavoriteVoice)*index, fv);
 }
 
@@ -213,19 +214,16 @@ Voice GetFavoriteFromEEPROM(uint16_t index)
     Serial.println("ERROR, index mismatch!");
     Serial.print("Wanted: "); Serial.println(index, HEX);
     Serial.print("Got: "); Serial.println(fv.index, HEX);
-    LCDInit();
+    currentFavorite = 0xFF;
+    LCDRedraw(lcdSelectionIndex);
     lcd.setCursor(0, 2);
     lcd.print("No favorite set");
     lcd.setCursor(0,3);
     lcd.print("Hold to set favorite");
     return voices[currentProgram];
   }
-  LCDInit();
-  lcd.setCursor(0, 2);
-  lcd.print(fv.fileName);
-  lcd.setCursor(0, 3);
-  lcd.print("Voice #:"); lcd.print(fv.voiceNumber); lcd.print("   "); lcd.write(2); lcd.print(currentFavorite);
-
+  ym2612.SetOctaveShift(fv.octaveShift);
+  LCDRedraw(lcdSelectionIndex);
   return fv.v;
 }
 
@@ -330,7 +328,7 @@ bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   currentProgram = 0;
-  LCDInit();
+  LCDRedraw();
   return true;
 }
 
@@ -393,7 +391,7 @@ bool LoadFile(String req) //Request a file (string) to load
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
   currentProgram = 0;
-  LCDInit();
+  LCDRedraw();
   return true;
 }
 
@@ -415,36 +413,79 @@ void removeSVI() //Sometimes, Windows likes to place invisible files in our SD c
 
 void HandleRotaryButtonDown()
 {
-  lcd.setCursor(0, lcdSelectionIndex);
-  lcd.print(" ");
   lcdSelectionIndex++;
-  lcdSelectionIndex %= 2;
-  lcd.setCursor(0, lcdSelectionIndex);
-  lcd.write((uint8_t)0); //Arrow Left
+  lcdSelectionIndex %= 3;
+  LCDRedraw(lcdSelectionIndex);
+  // if(lcdSelectionIndex == 2)
+  // {
+  //   lcd.setCursor(14, 1);
+  //   lcd.print(" ");
+  //   lcd.setCursor(14, 1);
+  //   LCDRedraw(lcdSelectionIndex);
+  // }
+  // else
+  // {
+  //   lcd.setCursor(0, lcdSelectionIndex);
+  //   lcd.print(" ");
+  //   lcd.setCursor(0, lcdSelectionIndex);
+  //   lcd.write((uint8_t)0); //Arrow Right
+  // }
 }
 
-void LCDInit(uint8_t graphicCursorPos)
+void LCDRedraw(uint8_t graphicCursorPos)
 {
   lcd.clear();
   lcd.home();
   lcdSelectionIndex = graphicCursorPos;
   lcd.setCursor(0, lcdSelectionIndex);
   lcd.print(" ");
-  lcd.setCursor(graphicCursorPos, lcdSelectionIndex);
-  lcd.write((uint8_t)0); //Arrow Left
+  // if(graphicCursorPos == 2)
+  //   lcd.setCursor(14, 1);
+  // else
+  //   lcd.setCursor(graphicCursorPos, lcdSelectionIndex);
+  // lcd.write((uint8_t)0); //Arrow Right
+  if(lcdSelectionIndex < 2)
+  {
+    lcd.setCursor(0, lcdSelectionIndex);
+    lcd.print(" ");
+    lcd.setCursor(0, lcdSelectionIndex);
+    lcd.write((uint8_t)0); //Arrow Right
+  }
+
   lcd.setCursor(1, 0);
   String fn = fileName;
   fn = fn.remove(LCD_COLS-1);
   fileScroll = fileName;
   lcd.print(fn);
   lcd.setCursor(1, 1);
-  ClearLCDLine(1);
-  lcd.setCursor(1, 1);
-  lcd.print("Voice # ");
+  lcd.print("Voice #");
   lcd.print(currentProgram);
   lcd.print("/");
   lcd.print(maxValidVoices-1);
   lcd.print("  ");
+  lcd.setCursor(15, 1);
+  lcd.print("OCT");
+  int8_t oct = ym2612.GetOctaveShift();
+  if(oct >= 0)
+    lcd.print("+");
+  lcd.print(oct);
+  if(lcdSelectionIndex == 2)
+  {
+    lcd.setCursor(14, 1);
+    lcd.print(" ");
+    lcd.setCursor(14, 1);
+    lcd.write((uint8_t)0); //Arrow Right
+  }
+
+  if(currentFavorite != 0xFF && currentFavorite < 8)
+  {
+    FavoriteVoice fv;
+    EEPROM.get(sizeof(FavoriteVoice)*currentFavorite, fv);
+    lcd.setCursor(0, 2);
+    lcd.print(fv.fileName);
+    lcd.setCursor(0, 3);
+    lcd.print("Voice #"); lcd.print(fv.voiceNumber); lcd.print("   "); lcd.write(2); lcd.print(currentFavorite);
+  }
 }
 
 void ResetSoundChips()
@@ -619,15 +660,7 @@ void ProgramChange(byte channel, byte program)
       program = maxValidVoices-1;
     program %= maxValidVoices;
     currentProgram = program;
-    LCDInit(1);
-    lcd.setCursor(1, 1);
-
-    lcd.setCursor(0, 1);
-    lcd.write((uint8_t)0); //Arrow Left
-    lcd.print("Voice # ");
-    lcd.print(currentProgram);
-    lcd.print("/");
-    lcd.print(maxValidVoices-1);
+    LCDRedraw(lcdSelectionIndex);
     ym2612.SetVoice(voices[currentProgram]);
     Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
     DumpVoiceData(voices[currentProgram]);
@@ -718,8 +751,8 @@ void HandleRotaryEncoder()
       case 0:
       {
         LoadFile(isEncoderUp ? NEXT_FILE : PREV_FILE);
-        LCDInit();
         currentFavorite = 0xFF;
+        LCDRedraw(lcdSelectionIndex);
         UpdateLEDs();
       break;
       }
@@ -727,9 +760,16 @@ void HandleRotaryEncoder()
       {
         ProgramChange(YM_CHANNEL, isEncoderUp ? currentProgram+1 : currentProgram-1);
         currentFavorite = 0xFF;
+        LCDRedraw(lcdSelectionIndex);
         UpdateLEDs();
       break;
       }
+      case 2:
+      {
+        isEncoderUp == true ? ym2612.ShiftOctaveUp() : ym2612.ShiftOctaveDown();
+        LCDRedraw(lcdSelectionIndex); 
+      }
+      break;
     }
     encoderPos = enc;
   }
@@ -771,7 +811,7 @@ void ScrollFileNameLCD()
       lcd.setCursor(0, lcdSelectionIndex);
       lcd.write(" ");
       lcd.setCursor(0, lcdSelectionIndex);
-      lcd.write((uint8_t)0); //Arrow Left
+      lcd.write((uint8_t)0); //Arrow Right
     }
     else
     {
@@ -848,6 +888,7 @@ void HandleFavoriteButtons(byte portValue)
     else
     {
       ym2612.SetVoice(voices[currentProgram]);
+      LCDRedraw(lcdSelectionIndex);
       currentFavorite = 0xFF;
     }
   }
@@ -884,10 +925,9 @@ void ProgramNewFavorite()
   if(currentFavorite == 0xFF)
     return;
   Serial.print("NEW FAVORITE: "); Serial.println(currentFavorite);
-  LCDInit();
-  lcd.setCursor(0, 2);
-  lcd.print("New favorite set: "); lcd.print(currentFavorite);
   PutFavoriteIntoEEPROM(voices[currentProgram], currentFavorite);
+  GetFavoriteFromEEPROM(currentFavorite);
+  LCDRedraw(lcdSelectionIndex);
   BlinkLED(currentFavorite);
   digitalWriteFast(leds[currentFavorite], HIGH);
 }

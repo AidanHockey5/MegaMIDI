@@ -392,20 +392,30 @@ void YM2612::ToggleLFO()
   digitalWriteFast(leds[0], lfoOn);
 }
 
+void YM2612::SetOctaveShift(int8_t shift)
+{
+  octaveShift = shift;
+}
+
+int8_t YM2612::GetOctaveShift()
+{
+  return octaveShift;
+}
+
 void YM2612::ShiftOctaveUp()
 {
   if(octaveShift == MAX_OCTAVE_SHIFT)
     return;
   octaveShift++;
-  Serial.print("Octave Shift Up: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+  Serial.print("Octave Shift Up: "); Serial.print(octaveShift);
 }
 
 void YM2612::ShiftOctaveDown()
 {
-  if(octaveShift == 0)
+  if(octaveShift == -MAX_OCTAVE_SHIFT)
     return;
   octaveShift--;
-  Serial.print("Octave Shift Down: "); Serial.print(octaveShift); Serial.print("/"); Serial.println(MAX_OCTAVE_SHIFT);
+  Serial.print("Octave Shift Down: "); Serial.print(octaveShift);
 }
 
 uint16_t YM2612::CalcFNumber(float note)

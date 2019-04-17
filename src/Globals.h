@@ -11,6 +11,7 @@ typedef struct
     unsigned char index = 0xFF; //Use this as a simple way to check EEPROM for valid saved voice
     char fileName[20+1]; //+1 for null terminator
     unsigned char voiceNumber = 0;
+    signed char octaveShift = 0;
 } FavoriteVoice;
 
 

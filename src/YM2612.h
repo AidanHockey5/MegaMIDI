@@ -23,7 +23,7 @@ private:
     } Channel;
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
-    uint8_t octaveShift = 0;
+    int8_t octaveShift = 0;
     unsigned char bank0[0xB7-0x21]; //Shadow registers
     unsigned char bank1[0xB7-0x30];
     Voice currentVoice;
@@ -31,6 +31,8 @@ public:
     YM2612();
     Channel channels[MAX_CHANNELS_YM];
     bool lfoOn = false;
+    int8_t GetOctaveShift();
+    void SetOctaveShift(int8_t shift);
     void SetChannelOn(uint8_t key, uint8_t velocity);
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
