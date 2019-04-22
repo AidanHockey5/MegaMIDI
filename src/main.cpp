@@ -3,6 +3,13 @@
 //HIGH: 0xDF
 //LOW: 0x5E
 
+//Use SERIAL_CONNECT.bat file found in the 'tools' folder of this repository.
+//----OR----
+//Access serial connection using Arduino IDE. Ensure that teensy software suite has been installed https://www.pjrc.com/teensy/td_download.html
+//In Arduino, look for Tools->Port->(Emulated Serial)
+//Open serial monitor
+//Device should reset. You may need to try this a couple times.
+
 #define FW_VERSION "1.0_a"
 
 #define MIDI_NAME {'M','e','g','a',' ', 'M', 'I', 'D', 'I'}
@@ -21,14 +28,6 @@
 #include <EEPROM.h>
 #include "LCDChars.h"
 #include "usb_midi_serial.h"
-
-
-//Notes: Access serial connection using Arduino IDE. Ensure that teensy software suite has been installed https://www.pjrc.com/teensy/td_download.html
-//In Arduino, look for Tools->Port->(Emulated Serial)
-//Open serial monitor
-//Device should reset. You may need to try this a couple times.
-//----OR----
-//Use SERIAL_CONNECT.bat file found in the 'tools' folder of this repository.
 
 //Music
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
@@ -108,7 +107,6 @@ void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
 
-
 void setup() 
 {
   //YM2612 and PSG Clock Generation
@@ -125,7 +123,7 @@ void setup()
   TCCR3A = bit (COM3A0);  // toggle OC3A on Compare Match
   TCCR3B = bit (WGM32) | bit (CS30);   // CTC, no prescaling
   OCR3A =  1; //Divide by 4
-  
+
   Serial.begin(115200);
   lcd.createChar(0, arrowCharLeft);
   lcd.createChar(1, arrowCharRight);

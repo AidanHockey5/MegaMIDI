@@ -29,7 +29,7 @@ void SN76489::send(uint8_t data)
     digitalWriteFast(_WE, HIGH);
     PORTF = data;
     digitalWriteFast(_WE, LOW);
-    delayMicroseconds(14);
+    delayMicroseconds(25);
     digitalWriteFast(_WE, HIGH);
 }
 
