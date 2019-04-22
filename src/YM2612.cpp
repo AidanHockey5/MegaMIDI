@@ -149,19 +149,26 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     uint8_t openChannel = 0xFF;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)
     {
-        if(!channels[i].keyOn)
+        if(!channels[i].keyOn || channels[i].keyNumber == key)
         {
-            // if(channels[i].keyNumber == key)
-            //     continue;
+            if(channels[i].keyNumber == key && channels[i].sustained)
+            {
+              //Turn off the sustained channel before turning it back on again
+              uint8_t offset = i % 3;
+              bool setA1 = i > 2;
+              send(0x28, 0x00 + offset + (setA1 << 2));
+            }
             channels[i].keyOn = true;
             channels[i].keyNumber = key;
             channels[i].blockNumber = key/12;
+            channels[i].sustained = sustainEnabled;
             openChannel = i;
             break;
         }
     }
     uint8_t offset = openChannel % 3;
     bool setA1 = openChannel > 2;
+    Serial.print("OPEN CH: "); Serial.println(openChannel);
     if(openChannel == 0xFF)
       return;
     if(pitchBendYM == 0)
@@ -185,6 +192,8 @@ void YM2612::SetChannelOff(uint8_t key)
     {
         if(channels[i].keyNumber == key)
         {
+            if(channels[i].sustained)
+              continue;
             channels[i].keyOn = false;
             closedChannel = i;
             break;
@@ -195,6 +204,29 @@ void YM2612::SetChannelOff(uint8_t key)
     uint8_t offset = closedChannel % 3;
     bool setA1 = closedChannel > 2;
     send(0x28, 0x00 + offset + (setA1 << 2));
+}
+
+void YM2612::ReleaseSustainedKeys()
+{
+  for(int i = 0; i<MAX_CHANNELS_YM; i++)
+  {
+    if(channels[i].sustained && channels[i].keyOn)
+    {
+      channels[i].sustained = false;
+      SetChannelOff(channels[i].keyNumber);
+    }
+  }
+}
+
+void YM2612::ClampSustainedKeys()
+{
+  for(int i = 0; i<MAX_CHANNELS_YM; i++)
+  {
+    if(!channels[i].sustained && channels[i].keyOn)
+    {
+      channels[i].sustained = true;
+    }
+  }
 }
 
 void YM2612::SetVoice(Voice v)

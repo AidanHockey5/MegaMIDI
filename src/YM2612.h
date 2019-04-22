@@ -18,6 +18,7 @@ private:
     typedef struct
     {
         bool keyOn = false;
+        bool sustained = false;
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
     } Channel;
@@ -40,6 +41,8 @@ public:
     void SetFrequency(uint16_t frequency, uint8_t channel);
     void AdjustLFO(uint8_t value);
     void AdjustPitch(uint8_t channel, int pitch);
+    void ReleaseSustainedKeys();
+    void ClampSustainedKeys();
     uint16_t CalcFNumber(float note);
     void ShiftOctaveUp();
     void ShiftOctaveDown();

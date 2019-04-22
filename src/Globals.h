@@ -4,7 +4,8 @@
 #include "Voice.h"
 
 static const unsigned char leds[] = {1, 3, 4, 5, 6, 7, 24, 27};
-static bool psgReady = false;
+extern bool psgReady;
+extern bool sustainEnabled;
 typedef struct 
 {
     Voice v;
@@ -13,6 +14,5 @@ typedef struct
     unsigned char voiceNumber = 0;
     signed char octaveShift = 0;
 } FavoriteVoice;
-
 
 #endif

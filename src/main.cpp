@@ -5,6 +5,9 @@
 
 #define FW_VERSION "1.0_a"
 
+#define MIDI_NAME {'M','e','g','a',' ', 'M', 'I', 'D', 'I'}
+#define MIDI_NAME_LEN 9
+
 #define F_CPU 16000000UL
 
 #include <Arduino.h>
@@ -645,9 +648,16 @@ void KeyOff(byte channel, byte key, byte velocity)
 
 void ControlChange(byte channel, byte control, byte value)
 {
+  Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
   if(control == 0x01)
   {
     ym2612.AdjustLFO(value);
+  }
+  else if(control == 0x40) //Sustain
+  {
+    sustainEnabled = (value >= 64);
+    Serial.print("SUSTAIN: "); Serial.println(sustainEnabled == true ? "ENABLED" : "DISABLED");
+    sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
   }
 }
 

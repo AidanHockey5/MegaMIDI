@@ -4,8 +4,8 @@
 #define PRODUCT_ID		0x0485
 #define MANUFACTURER_NAME	{'A','i','d','a','n',' ','L','a','w','r','e','n','c','e'}
 #define MANUFACTURER_NAME_LEN	14
-#define PRODUCT_NAME		{'Y','M','2','6','1','2',' ','M','I','D','I'}
-#define PRODUCT_NAME_LEN	11
+#define PRODUCT_NAME		{'M','e','g','a',' ','M','I','D','I'}
+#define PRODUCT_NAME_LEN	9
 #define EP0_SIZE		64
 #define NUM_ENDPOINTS         5
 #define NUM_USB_BUFFERS	30
