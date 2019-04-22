@@ -648,7 +648,7 @@ void KeyOff(byte channel, byte key, byte velocity)
 
 void ControlChange(byte channel, byte control, byte value)
 {
-  Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
+  //Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
   if(control == 0x01)
   {
     ym2612.AdjustLFO(value);
@@ -656,7 +656,6 @@ void ControlChange(byte channel, byte control, byte value)
   else if(control == 0x40) //Sustain
   {
     sustainEnabled = (value >= 64);
-    Serial.print("SUSTAIN: "); Serial.println(sustainEnabled == true ? "ENABLED" : "DISABLED");
     sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
   }
 }

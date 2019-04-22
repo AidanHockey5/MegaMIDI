@@ -168,7 +168,6 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
     }
     uint8_t offset = openChannel % 3;
     bool setA1 = openChannel > 2;
-    Serial.print("OPEN CH: "); Serial.println(openChannel);
     if(openChannel == 0xFF)
       return;
     if(pitchBendYM == 0)
