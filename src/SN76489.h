@@ -13,6 +13,7 @@ private:
     typedef struct
     {
         bool keyOn = false;
+        bool sustained = false;
         uint8_t keyNumber = 0;
     } Channel;
     const long clockHz = 4000000;
@@ -29,6 +30,8 @@ public:
     Channel channels[MAX_CHANNELS_PSG];
     void SetChannelOn(uint8_t key, uint8_t velocity);
     void SetChannelOff(uint8_t key);
+    void ClampSustainedKeys();
+    void ReleaseSustainedKeys();
     void UpdateAttenuation(uint8_t voice);
     void SetSquareFrequency(uint8_t voice, int frequencyData);
     bool UpdateSquarePitch(uint8_t voice);

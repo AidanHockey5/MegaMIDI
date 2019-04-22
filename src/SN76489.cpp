@@ -39,10 +39,16 @@ void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
     uint8_t channel = 0xFF;
     for(int i = 0; i<MAX_CHANNELS_PSG; i++)
     {
-        if(!channels[i].keyOn)
+        if(!channels[i].keyOn || channels[i].keyNumber == key)
         {
+            if(channels[i].keyNumber == key && channels[i].sustained)
+            {
+                currentVelocity[i] = 0;
+                UpdateAttenuation(i);
+            }
             channels[i].keyOn = true;
             channels[i].keyNumber = key;
+            channels[i].sustained = sustainEnabled;
             channel = i;
             break;
         }
@@ -115,6 +121,8 @@ void SN76489::SetChannelOff(uint8_t key)
     {
         if(channels[i].keyNumber == key)
         {
+            if(channels[i].sustained)
+              continue;
             channels[i].keyOn = false;
             channel = i;
             break;
@@ -126,6 +134,29 @@ void SN76489::SetChannelOff(uint8_t key)
         return;
     currentVelocity[channel] = 0;
     UpdateAttenuation(channel);
+}
+
+void SN76489::ReleaseSustainedKeys()
+{
+    for(int i = 0; i<MAX_CHANNELS_PSG; i++)
+    {
+        if(channels[i].sustained && channels[i].keyOn)
+        {
+            channels[i].sustained = false;
+            SetChannelOff(channels[i].keyNumber);
+        }
+    }
+}
+
+void SN76489::ClampSustainedKeys()
+{
+  for(int i = 0; i<MAX_CHANNELS_PSG; i++)
+  {
+    if(!channels[i].sustained && channels[i].keyOn)
+    {
+      channels[i].sustained = true;
+    }
+  }
 }
 
 //Notes

@@ -656,7 +656,13 @@ void ControlChange(byte channel, byte control, byte value)
   else if(control == 0x40) //Sustain
   {
     sustainEnabled = (value >= 64);
-    sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
+    if(channel == YM_CHANNEL)
+      sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
+    else
+    {
+      sustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
+    }
+    
   }
 }
 
