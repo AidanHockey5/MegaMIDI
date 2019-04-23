@@ -12,8 +12,7 @@
 
 #define FW_VERSION "1.0_a"
 
-#define MIDI_NAME {'M','e','g','a',' ', 'M', 'I', 'D', 'I'}
-#define MIDI_NAME_LEN 9
+
 
 #define F_CPU 16000000UL
 

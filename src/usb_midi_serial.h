@@ -1,7 +1,18 @@
 //Modify the chips's USB settings to allow for a MIDI connection AND an emulated serial port connection
+//PlatformIO teensy core files location
+//Windows: %userprofile%/.platformio/packages/framework-arduinoteensy/cores/usb_midi
+//Unix:  ~/.platformio/packages/framework-arduinoteensy/cores/usb_midi
+//Modify usb_private.h STR_PRODUCT to change hardware name
+
+
+
+#define STR_PRODUCT             L"Mega MIDI"
+
+
 #if defined(USB_MIDI)
 #define VENDOR_ID		0x16C0
-#define PRODUCT_ID		0x0485
+#define PRODUCT_ID		0x0480
+//#define PRODUCT_ID		0x0500
 #define MANUFACTURER_NAME	{'A','i','d','a','n',' ','L','a','w','r','e','n','c','e'}
 #define MANUFACTURER_NAME_LEN	14
 #define PRODUCT_NAME		{'M','e','g','a',' ','M','I','D','I'}
@@ -30,3 +41,4 @@
 #define ENDPOINT4_CONFIG	ENDPOINT_TRANSIMIT_ONLY
 #define ENDPOINT5_CONFIG	ENDPOINT_RECEIVE_ONLY
 #endif
+
