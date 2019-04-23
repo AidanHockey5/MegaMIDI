@@ -14,10 +14,30 @@ The Mega MIDI reads in ".opm" files. OPM files were originally designed for the 
 There are two ways:
 
 1) There is a massive pack of ripped OPM files ready to go that spans almost the entire Genesis library. You can find just about anything in this collection. [Click here to download it.](https://www.aidanlawrence.com/wp-content/uploads/2019/03/2612org-OPMs.zip)
+One thing to note: This is a REALLY big collection of files. I don't recommend putting them ALL on your SD card at once as load times will begin to suffer. 
 
 2) You can convert any OPN2(YM2612) .VGM file to an OPM patch using the vgm2opm tool courtesy of [Shiru](https://shiru.untergrund.net) https://github.com/vampirefrog/fmtools
 
 I have included a windows-compiled binary of vgm2opm within the [tools](https://github.com/AidanHockey5/MegaMIDI/tree/master/tools) directory of this repository along with a batch-file to automatically execute the tool. To use this tool, simply place your desired .vgm/vgz files within the VGM_IN folder, double-click the CONVERT_VGM_OPM.bat file, then retrieve your OPM patch files in the OPM_OUT folder.
+
+# USB MIDI and Tradition DIN MIDI Compatible
+Want to control The Mega MIDI through software like Ableton, FL Studio, or any other DAW? You can! The Mega MIDI will show up like any other MIDI-compatible instrument and is able to receive native USB MIDI commands without any sort of serial bridge. 
+Prefer old-school traditional 5-pin DIN MIDI instead? Go for it! Bust out that classic MIDI controller and plug it in with zero additional setup required.
+
+# Crystal-Clear Amplification 
+One feature that was not implemented from the original Genesis was its abysmal amplification stage. Instead, it has been replaced with a custom mixer, pre-amp, and power amplification stage that provides beautifully clear audio directly from the sound chips. This analog stage is nearly identical to the one found in the [Mega Blaster project.](https://github.com/AidanHockey5/STM32_VGM_Player_YM2612_SN76489)
+
+# 7 "Favorite" Buttons to Quickly Swap Between Your Favorite Patches
+While you do have access to every .opm file on your Mega MIDI's SD card, sometimes you'll find the *perfect* patch that you'll want to keep for easy-access later. Simply hold-down one of the seven "favorite" buttons at the bottom of the board and your currently loaded patch will be saved into EEPROM. Because favorite patches are saved to EEPROM, you can access them instantaneously without any load times. Perfect for swapping patches on-the-fly!
+
+# Open-source
+All of my source material has been made open-source. Want to build your own Mega MIDI from scratch? Go for it! Have some modifications in mind? I'd love to see them! If you do decide your own version, please credit me: Aidan Lawrence and refer back to this original repository. Please do not resell this project.
+
+# Tools
+The firmware for this project was developed in [Visual Studio Code](https://code.visualstudio.com/) with the [PlatformIO extention.](https://docs.platformio.org/en/latest/ide/vscode.html) I used the Teensyduino (ArduinoTeensy) toolchain.
+
+The schematics/PCB files were made with [KiCAD.](http://kicad-pcb.org/) Specifically, version 5.0.2.
+
 
 Here is the schematic so far. I'll release these files once I'm done with them.
 ![Here is the schematic so far](https://i.imgur.com/WZymTlD.jpg)
