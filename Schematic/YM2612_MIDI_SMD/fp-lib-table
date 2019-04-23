@@ -1,0 +1,9 @@
+(fp_lib_table
+  (lib (name lcd)(type KiCad)(uri ${KIPRJMOD}/libs/lcd.pretty)(options "")(descr ""))
+  (lib (name midicon)(type KiCad)(uri ${KIPRJMOD}/libs/midicon.pretty)(options "")(descr ""))
+  (lib (name bourns)(type KiCad)(uri ${KIPRJMOD}/libs/bourns.pretty)(options "")(descr ""))
+  (lib (name Rotary_Encoder)(type KiCad)(uri ${KIPRJMOD}/libs/Rotary_Encoder.pretty)(options "")(descr ""))
+  (lib (name art)(type KiCad)(uri ${KIPRJMOD}/art/art.pretty)(options "")(descr ""))
+  (lib (name inductor_1008)(type KiCad)(uri ${KIPRJMOD}/libs/inductor_1008.pretty)(options "")(descr ""))
+  (lib (name custom_inductors)(type KiCad)(uri ${KIPRJMOD}/libs/custom_inductors.pretty)(options "")(descr ""))
+)

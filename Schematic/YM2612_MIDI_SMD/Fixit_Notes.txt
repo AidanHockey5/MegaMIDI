@@ -1,0 +1,12 @@
+\\\Opamp Pins 4 and 8 not connected to AVCC and AGND
+\\\Button debounce caps are not on the correct pins
+\\\LCD R/W is tied to 5V, needs to be tied to GND
+\\\Capacitor C7 has needs to be 1206 (changed in schematic but not board)
+
+\\\Switch to all SMD components? (caps, replace resistor network with descrete components?)
+\\\12V trace to C12 needs to be enlarged
+\\\Add a reset button?
+
+
+\\\Add 100nF cap to YM clock line
+\\\2k pullup on psg_ready line

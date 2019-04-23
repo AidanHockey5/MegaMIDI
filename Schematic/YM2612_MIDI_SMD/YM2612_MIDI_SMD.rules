@@ -1,0 +1,144 @@
+
+(rules PCB YM2612_MIDI_SMD
+  (snap_angle 
+    fortyfive_degree
+  )
+  (autoroute_settings
+    (fanout off)
+    (autoroute on)
+    (postroute on)
+    (vias on)
+    (via_costs 50)
+    (plane_via_costs 5)
+    (start_ripup_costs 100)
+    (start_pass_no 3716)
+    (layer_rule F.Cu
+      (active on)
+      (preferred_direction horizontal)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 2.0)
+    )
+    (layer_rule B.Cu
+      (active on)
+      (preferred_direction vertical)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 2.0)
+    )
+  )
+  (rule
+    (width 250.0)
+    (clear 200.2)
+    (clear 125.0 (type smd_to_turn_gap))
+    (clear 50.0 (type smd_smd))
+  )
+  (padstack "Via[0-1]_800:400_um"
+    (shape
+      (circle F.Cu 800.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 800.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (via 
+    "Via[0-1]_800:400_um" "Via[0-1]_800:400_um" default
+  )
+  (via 
+    "Via[0-1]_800:400_um-kicad_default" "Via[0-1]_800:400_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_800:400_um-10V" "Via[0-1]_800:400_um" 10V
+  )
+  (via 
+    "Via[0-1]_800:400_um-12V" "Via[0-1]_800:400_um" 12V
+  )
+  (via 
+    "Via[0-1]_800:400_um-5V" "Via[0-1]_800:400_um" 5V
+  )
+  (via_rule
+    default "Via[0-1]_800:400_um"
+  )
+  (via_rule
+    "kicad_default" "Via[0-1]_800:400_um-kicad_default"
+  )
+  (via_rule
+    10V "Via[0-1]_800:400_um-10V"
+  )
+  (via_rule
+    12V "Via[0-1]_800:400_um-12V"
+  )
+  (via_rule
+    5V "Via[0-1]_800:400_um-5V"
+  )
+  (class default
+    (clearance_class default)
+    (via_rule default)
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "kicad_default"
+    GND "Net-(C5-Pad1)" "Net-(C6-Pad1)" "Net-(C7-Pad1)" "Net-(C8-Pad1)" "Net-(C9-Pad1)" "Net-(C10-Pad1)" "Net-(C11-Pad1)"
+    AVCC AGND "Net-(C22-Pad1)" "PRE_L" "Net-(C23-Pad2)" "Net-(C24-Pad2)" "PRE_R" "Net-(C25-Pad1)"
+    "AVCC_DIV2" "Net-(C28-Pad1)" "Net-(C28-Pad2)" "Net-(C29-Pad2)" "Net-(C29-Pad1)" "PSG_OUT" "Net-(C31-Pad2)" "Net-(C32-Pad1)"
+    MOR "Net-(C33-Pad1)" "Net-(C34-Pad1)" MOL "Net-(C35-Pad1)" "L_OUT" "R_OUT" "Net-(C38-Pad2)"
+    "Net-(C39-Pad1)" "Net-(C40-Pad2)" "Net-(C41-Pad1)" "RE_SW" +3V3 "Net-(D1-Pad2)" "Net-(D1-Pad1)" "Net-(D2-Pad2)"
+    "Net-(D3-Pad1)" "LED_1" "LED_2" "Net-(D4-Pad1)" "Net-(D5-Pad1)" "LED_3" "LED_4" "Net-(D6-Pad1)"
+    "Net-(D7-Pad1)" "LED_5" "LED_6" "Net-(D8-Pad1)" "Net-(D9-Pad1)" "LED_7" "LED_8" "Net-(D10-Pad1)"
+    "Net-(DS1-Pad3)" "LCD_RS" "LCD_E" D0 D1 D2 D3 D4
+    D5 D6 D7 "Net-(DS1-Pad15)" "USB_D+" "Net-(J2-Pad1)" "USB_D-" "Net-(J3-Pad3)"
+    "Net-(J3-Pad4)" "Net-(J3-Pad2)" "Net-(J3-Pad1)" "Net-(J5-Pad8)" MISO "Net-(J5-Pad5)" "Net-(J5-Pad3)" "Net-(J5-Pad2)"
+    "Net-(J5-Pad1)" RESET MOSI SCK "Net-(R1-Pad1)" "Net-(R2-Pad1)" "Net-(R3-Pad1)" "Net-(R4-Pad1)"
+    "Net-(R5-Pad1)" "MIDI_IN" "Net-(R21-Pad1)" "Net-(R22-Pad1)" "Net-(SW1-Pad3)" B1 B2 "Net-(SW2-Pad3)"
+    "Net-(SW3-Pad3)" B3 B4 "Net-(SW4-Pad3)" "Net-(SW5-Pad3)" B5 B6 "Net-(SW6-Pad3)"
+    "Net-(SW7-Pad3)" B7 B8 "Net-(SW8-Pad3)" "RE_B" "RE_A" "PSG_CLOCK" "YM_CLOCK"
+    "YM_IC" "YM_CS" "YM_WR" "YM_RD" "YM_A0" "YM_A1" "PSG_WE" "Net-(U2-Pad54)"
+    "Net-(U2-Pad34)" "Net-(U2-Pad33)" "Net-(U2-Pad18)" "SD_CS" "Net-(U2-Pad9)" "Net-(U3-Pad10)" "Net-(U3-Pad13)" "Net-(U4-Pad9)"
+    "Net-(U6-Pad3)" "Net-(U11-Pad15)" "Net-(U11-Pad12)" "Net-(U11-Pad10)" "PSG_RDY" "Net-(C48-Pad2)" "Net-(SW10-Pad2)" "Net-(SW10-Pad3)"
+    "Net-(SW8-Pad2)" "Net-(SW7-Pad2)" "Net-(SW6-Pad2)" "Net-(SW5-Pad2)" "Net-(SW4-Pad2)" "Net-(SW3-Pad2)" "Net-(SW2-Pad2)" "Net-(SW1-Pad2)"
+    (clearance_class "kicad_default")
+    (via_rule kicad_default)
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class 10V
+    +10V
+    (clearance_class 10V)
+    (via_rule 10V)
+    (rule
+      (width 600.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class 12V
+    "Net-(C12-Pad1)"
+    (clearance_class 12V)
+    (via_rule 12V)
+    (rule
+      (width 600.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class 5V
+    +5V
+    (clearance_class 5V)
+    (via_rule 5V)
+    (rule
+      (width 750.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+)

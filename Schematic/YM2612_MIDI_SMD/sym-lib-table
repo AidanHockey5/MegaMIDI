@@ -1,0 +1,8 @@
+(sym_lib_table
+  (lib (name MCU_Microchip_AVR)(type Legacy)(uri ${KIPRJMOD}/libs/MCU_Microchip_AVR.lib)(options "")(descr ""))
+  (lib (name ym2612)(type Legacy)(uri ${KIPRJMOD}/libs/ym2612.lib)(options "")(descr ""))
+  (lib (name sn76489)(type Legacy)(uri ${KIPRJMOD}/libs/sn76489.lib)(options "")(descr ""))
+  (lib (name PowerComponents)(type Legacy)(uri ${KIPRJMOD}/libs/PowerComponents.lib)(options "")(descr ""))
+  (lib (name 3_5_TRS_Jack)(type Legacy)(uri ${KIPRJMOD}/libs/3_5_TRS_Jack.lib)(options "")(descr ""))
+  (lib (name TPA3122D2)(type Legacy)(uri ${KIPRJMOD}/libs/TPA3122D2.lib)(options "")(descr ""))
+)
