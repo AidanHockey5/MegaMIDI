@@ -7,4 +7,4 @@ A work-in-progress MIDI synthesizer that allows you to play any Sega Genesis/Meg
 More info to come soon! I'm still working on this project! :)
 
 Here is the schematic so far. I'll release these files once I'm done with them.
-![Here is the schematic so far](https://i.imgur.com/jw0pPGi.jpg)
+![Here is the schematic so far](https://i.imgur.com/WZymTlD.jpg)
