@@ -16,7 +16,7 @@ There are two ways:
 1) There is a massive pack of ripped OPM files ready to go that spans almost the entire Genesis library. You can find just about anything in this collection. [Click here to download it.](https://www.aidanlawrence.com/wp-content/uploads/2019/03/2612org-OPMs.zip)
 One thing to note: This is a REALLY big collection of files. I don't recommend putting them ALL on your SD card at once as load times will begin to suffer. 
 
-2) You can convert any OPN2(YM2612) .VGM file to an OPM patch using the vgm2opm tool courtesy of [Shiru](https://shiru.untergrund.net) https://github.com/vampirefrog/fmtools
+2) You can convert any OPN2(YM2612) .VGM file to an OPM patch using the vgm2opm tool courtesy of [Shiru](https://shiru.untergrund.net) and https://github.com/vampirefrog/fmtools
 
 I have included a windows-compiled binary of vgm2opm within the [tools](https://github.com/AidanHockey5/MegaMIDI/tree/master/tools) directory of this repository along with a batch-file to automatically execute the tool. To use this tool, simply place your desired .vgm/vgz files within the VGM_IN folder, double-click the CONVERT_VGM_OPM.bat file, then retrieve your OPM patch files in the OPM_OUT folder.
 
