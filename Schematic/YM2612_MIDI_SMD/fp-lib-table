@@ -6,4 +6,5 @@
   (lib (name art)(type KiCad)(uri ${KIPRJMOD}/art/art.pretty)(options "")(descr ""))
   (lib (name inductor_1008)(type KiCad)(uri ${KIPRJMOD}/libs/inductor_1008.pretty)(options "")(descr ""))
   (lib (name custom_inductors)(type KiCad)(uri ${KIPRJMOD}/libs/custom_inductors.pretty)(options "")(descr ""))
+  (lib (name MegaMIDI_FootprintCache)(type KiCad)(uri ${KIPRJMOD}/libs/MegaMIDI_FootprintCache.pretty)(options "")(descr ""))
 )
