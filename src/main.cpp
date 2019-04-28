@@ -10,7 +10,7 @@
 //Open serial monitor
 //Device should reset. You may need to try this a couple times.
 
-#define FW_VERSION "1.0_a"
+#define FW_VERSION "1.0"
 
 
 
