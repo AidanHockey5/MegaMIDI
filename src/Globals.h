@@ -4,7 +4,8 @@
 #include "Voice.h"
 
 static const unsigned char leds[] = {1, 3, 4, 5, 6, 7, 24, 27};
-extern bool sustainEnabled;
+extern bool YMsustainEnabled;
+extern bool PSGsustainEnabled;
 typedef struct 
 {
     Voice v;

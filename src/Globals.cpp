@@ -1,3 +1,4 @@
 #include "Globals.h"
 
-bool sustainEnabled = false;
+bool YMsustainEnabled = false;
+bool PSGsustainEnabled = false;

@@ -645,21 +645,23 @@ void KeyOff(byte channel, byte key, byte velocity)
 
 void ControlChange(byte channel, byte control, byte value)
 {
-  Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
+  //Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
   if(control == 0x01)
   {
     ym2612.AdjustLFO(value);
   }
   else if(control == 0x40) //Sustain
   {
-    sustainEnabled = (value >= 64);
     if(channel == YM_CHANNEL)
-      sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
+    {
+      YMsustainEnabled = (value >= 64);
+      YMsustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
+    }
     else if(channel == PSG_CHANNEL)
     {
-      sustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
+      PSGsustainEnabled = (value >= 64);
+      PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
-    
   }
 }
 

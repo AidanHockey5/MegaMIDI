@@ -161,7 +161,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
             channels[i].keyOn = true;
             channels[i].keyNumber = key;
             channels[i].blockNumber = key/12;
-            channels[i].sustained = sustainEnabled;
+            channels[i].sustained = YMsustainEnabled;
             openChannel = i;
             break;
         }

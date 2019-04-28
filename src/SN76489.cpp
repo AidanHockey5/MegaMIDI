@@ -48,7 +48,7 @@ void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
             }
             channels[i].keyOn = true;
             channels[i].keyNumber = key;
-            channels[i].sustained = sustainEnabled;
+            channels[i].sustained = PSGsustainEnabled;
             channel = i;
             break;
         }
