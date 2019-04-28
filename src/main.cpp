@@ -16,6 +16,7 @@
 
 #define F_CPU 16000000UL
 
+#include "usb_midi_serial.h"
 #include <Arduino.h>
 #include "Voice.h"
 #include "YM2612.h"
@@ -26,7 +27,6 @@
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 #include "LCDChars.h"
-#include "usb_midi_serial.h"
 
 //Music
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
@@ -645,7 +645,7 @@ void KeyOff(byte channel, byte key, byte velocity)
 
 void ControlChange(byte channel, byte control, byte value)
 {
-  //Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
+  Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
   if(control == 0x01)
   {
     ym2612.AdjustLFO(value);
@@ -655,7 +655,7 @@ void ControlChange(byte channel, byte control, byte value)
     sustainEnabled = (value >= 64);
     if(channel == YM_CHANNEL)
       sustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
-    else
+    else if(channel == PSG_CHANNEL)
     {
       sustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
