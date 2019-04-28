@@ -43,6 +43,8 @@ The firmware for this project was developed in [Visual Studio Code](https://code
 
 The schematics/PCB files were made with [KiCAD.](http://kicad-pcb.org/) Specifically, version 5.0.2.
 
+Precompiled firmware HEX files can be found here:
+https://github.com/AidanHockey5/MegaMIDI/releases/
 
-Here is the schematic so far. I'll release these files once I'm done with them.
+Here is the schematic:
 ![Here is the schematic so far](https://i.imgur.com/WZymTlD.jpg)
