@@ -23,12 +23,10 @@ private:
     uint8_t currentNote[4] = {0, 0, 0, 0};
     uint8_t currentVelocity[4] = {0, 0, 0, 0};
     int currentPitchBend[3] = {8192, 8192, 8192};
-    bool enablePSGVelocity = true;
 public:
     SN76489();
-    void ToggleVelocitySensitivity();
     Channel channels[MAX_CHANNELS_PSG];
-    void SetChannelOn(uint8_t key, uint8_t velocity);
+    void SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled);
     void SetChannelOff(uint8_t key);
     void ClampSustainedKeys();
     void ReleaseSustainedKeys();

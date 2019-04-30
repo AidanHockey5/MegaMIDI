@@ -10,7 +10,43 @@
 //Open serial monitor
 //Device should reset. You may need to try this a couple times.
 
-#define FW_VERSION "1.0"
+//Programming:
+/*
+You can use the ArduinoISP sketch from the Arduino IDE to turn any standard Arduno Uno/Nano/Mega into a programmer.
+It is reccomended that you change the ArduinoISP programmer speed to  #define BAUDRATE	1000000 (line 144), but the default
+setting of 19200 works too, though it is very slow.
+
+Default AVRDUDE command is:
+avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
+
+Pin connections:
+
+The Mega MIDI 6-pin programming connector looks like this:
+
+      MISO °. . 5V 
+      SCK   . . MOSI
+      RST   . . GND
+
+Arduino | Mega MIDI programming header
+GND     | GND
+10      | RST
+11      | MOSI
+12      | MISO
+13      | SCK
+
+You do not need to connect 5V.
+
+Using the FLASH.bat file found in the tools folder, or by using the terminal below, you can easily flash your Mega MIDI
+Vscode terminal command:
+////////////////////////
+cd tools
+./FLASH.bat
+///////////////////////
+
+The SD card will not read properly after being programmed with an ISP device. Remove the SD card, reinsert the card, then press the RESET button on the Mega MIDI board.
+*/
+
+#define FW_VERSION "1.1"
 
 
 
@@ -32,9 +68,11 @@
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
 
 //MIDI
-#define YM_CHANNEL 1
-#define PSG_CHANNEL 2
-#define YM_VELOCITY_CHANNEL 3
+#define YM_VELOCITY_CHANNEL 1
+#define PSG_VELOCITY_CHANNEL 2
+#define YM_CHANNEL 3
+#define PSG_CHANNEL 4
+
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
 //DEBUG
@@ -611,7 +649,7 @@ void PitchChange(byte channel, int pitch)
       ym2612.AdjustPitch(i, pitch);
     }
   }
-  else if(channel == PSG_CHANNEL)
+  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
     for(int i = 0; i<MAX_CHANNELS_PSG; i++)
     {
@@ -626,9 +664,9 @@ void KeyOn(byte channel, byte key, byte velocity)
   {
     ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
   }
-  else if(channel == PSG_CHANNEL)
+  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
-    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity);
+    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
   }
 }
 
@@ -638,7 +676,7 @@ void KeyOff(byte channel, byte key, byte velocity)
   {
     ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
   }
-  else if(channel == PSG_CHANNEL)
+  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
     sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
   }
@@ -658,7 +696,7 @@ void ControlChange(byte channel, byte control, byte value)
       YMsustainEnabled = (value >= 64);
       YMsustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
     }
-    else if(channel == PSG_CHANNEL)
+    else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
     {
       PSGsustainEnabled = (value >= 64);
       PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
@@ -729,11 +767,6 @@ void HandleSerialIn()
       case '!': //Reset the sound chips
       {
         ResetSoundChips();
-        return;
-      }
-      case 'v': //Toggle velocity sensitivity for the PSG
-      {
-        sn76489.ToggleVelocitySensitivity();
         return;
       }
       case 'r': //Request a new opm file. format:    r:myOpmFile.opm

@@ -33,7 +33,7 @@ void SN76489::send(uint8_t data)
     digitalWriteFast(_WE, HIGH);
 }
 
-void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
+void SN76489::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
 {
     bool updateAttenuationFlag;
     uint8_t channel = 0xFF;
@@ -59,7 +59,7 @@ void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
     if(channel < MAX_CHANNELS_PSG)
     {
         currentNote[channel] = key;
-        if(enablePSGVelocity)
+        if(velocityEnabled)
             currentVelocity[channel] = velocity;
         else
             currentVelocity[channel] = 127;
@@ -67,12 +67,6 @@ void SN76489::SetChannelOn(uint8_t key, uint8_t velocity)
         if (updateAttenuationFlag) 
             UpdateAttenuation(channel);
     }
-}
-
-void SN76489::ToggleVelocitySensitivity()
-{
-    enablePSGVelocity = !enablePSGVelocity;
-    Serial.print("PSG VELOCITY SENSITIVITY: "); Serial.println(enablePSGVelocity == true ? "ON" : "OFF");
 }
 
 void SN76489::PitchChange(uint8_t channel, int pitch)
