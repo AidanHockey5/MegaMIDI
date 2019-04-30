@@ -7,7 +7,7 @@ echo .
 echo .
 :start
 echo Please enter the COM port number that your Arduino is on (not the Mega MIDI, the Arduino programmer)
-echo (Do not include the 'COM' prefix, just the number. You can find this COM port number in the Arduino IDE under Tools->Port)
+echo (Do not include the 'COM' prefix, just the number. You can find this COM port number in the Arduino IDE under Tools--Port)
 set /p com="COM: "
 
 if "%com%" == "" goto start
