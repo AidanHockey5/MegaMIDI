@@ -34,7 +34,7 @@ public:
     bool lfoOn = false;
     int8_t GetOctaveShift();
     void SetOctaveShift(int8_t shift);
-    void SetChannelOn(uint8_t key, uint8_t velocity);
+    void SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled);
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
     float NoteToFrequency(uint8_t note);
@@ -50,6 +50,7 @@ public:
     void Reset();
     void send(unsigned char addr, unsigned char data, bool setA1=0);
     void DumpShadowRegisters();
+    uint8_t GetShadowValue(uint8_t addr, bool bank);
 };
 #endif
 

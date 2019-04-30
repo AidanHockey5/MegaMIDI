@@ -144,7 +144,7 @@ float YM2612::NoteToFrequency(uint8_t note)
     return (f+(f*TUNE))*multiplier[(note/12)+octaveShift];
 }
 
-void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
+void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
 {
     uint8_t openChannel = 0xFF;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)
@@ -180,8 +180,63 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity)
       float freqTo = NoteToFrequency(key+pitchBendYMRange);
       SetFrequency(map(pitchBendYM, -8192, 8192, freqFrom, freqTo), openChannel);
     }
+    if(velocityEnabled)
+    {
+      uint8_t s_FBALGO = GetShadowValue(0xB0, 0);
+      uint8_t algo = 0b00000111 & s_FBALGO;
+      uint8_t fb = 0b00111000 & s_FBALGO;
+      velocity = 127-velocity;
+      Serial.print("ALGO: "); Serial.println(algo, DEC);
+      Serial.print("FBALGO: "); Serial.println(s_FBALGO);
+      for(int a1 = 0; a1<=1; a1++)
+      {
+        for(int i = 0; i<3; i++)
+        {
+          switch(algo)
+          {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            {
+              //Algos 0-3 all use OP.4 as the "slot" (AKA output or carrier)
+              send(0x4C+i, velocity, a1);
+              break;
+            }
+            case 4:
+            {
+              send(0x44+i, velocity, a1);
+              send(0x4C+i, velocity, a1);
+              break;
+            }
+            case 5:
+            case 6:
+            {
+              //Algos 5-6 use OP.2 & OP.3 & OP.4
+              send(0x44+i, velocity, a1);
+              send(0x48+i, velocity, a1);
+              send(0x4C+i, velocity, a1);
+              break;
+            }
+            case 7:
+            {
+              //This algo uses every operator as a slot
+              send(0x40+i, velocity, a1);
+              send(0x44+i, velocity, a1);
+              send(0x48+i, velocity, a1);
+              send(0x4C+i, velocity, a1);
+              break;
+            }
+          }
+        }
+      }
+    }
     send(0x28, 0xF0 + offset + (setA1 << 2));  
+}
 
+uint8_t YM2612::GetShadowValue(uint8_t addr, bool bank)
+{
+  return bank ? bank1[addr-0x30] : bank0[addr-0x21];
 }
 
 void YM2612::SetChannelOff(uint8_t key)

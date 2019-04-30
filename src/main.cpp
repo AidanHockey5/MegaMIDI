@@ -34,6 +34,7 @@
 //MIDI
 #define YM_CHANNEL 1
 #define PSG_CHANNEL 2
+#define YM_VELOCITY_CHANNEL 3
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
 //DEBUG
@@ -602,7 +603,7 @@ void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM fi
 
 void PitchChange(byte channel, int pitch)
 {
-  if(channel == YM_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     pitchBendYM = pitch;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)
@@ -621,9 +622,9 @@ void PitchChange(byte channel, int pitch)
 
 void KeyOn(byte channel, byte key, byte velocity)
 {
-  if(channel == YM_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
-    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity);
+    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
   }
   else if(channel == PSG_CHANNEL)
   {
@@ -633,7 +634,7 @@ void KeyOn(byte channel, byte key, byte velocity)
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  if(channel == YM_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
   }
@@ -652,7 +653,7 @@ void ControlChange(byte channel, byte control, byte value)
   }
   else if(control == 0x40) //Sustain
   {
-    if(channel == YM_CHANNEL)
+    if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
     {
       YMsustainEnabled = (value >= 64);
       YMsustainEnabled == true ? ym2612.ClampSustainedKeys() : ym2612.ReleaseSustainedKeys();
@@ -668,7 +669,7 @@ void ControlChange(byte channel, byte control, byte value)
 uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
-  if(channel == YM_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     if(program == 255)
       program = maxValidVoices-1;
