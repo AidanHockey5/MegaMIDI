@@ -186,8 +186,6 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
       uint8_t algo = 0b00000111 & s_FBALGO;
       uint8_t fb = 0b00111000 & s_FBALGO;
       velocity = 127-velocity;
-      Serial.print("ALGO: "); Serial.println(algo, DEC);
-      Serial.print("FBALGO: "); Serial.println(s_FBALGO);
       for(int a1 = 0; a1<=1; a1++)
       {
         for(int i = 0; i<3; i++)
