@@ -16,9 +16,6 @@ You can use the ArduinoISP sketch from the Arduino IDE to turn any standard Ardu
 It is reccomended that you change the ArduinoISP programmer speed to  #define BAUDRATE	1000000 (line 144), but the default
 setting of 19200 works too, though it is very slow.
 
-Default AVRDUDE command is:
-avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
-
 Pin connections:
 
 The Mega MIDI 6-pin programming connector looks like this:
@@ -44,6 +41,9 @@ cd tools
 ///////////////////////
 
 The SD card will not read properly after being programmed with an ISP device. Remove the SD card, reinsert the card, then press the RESET button on the Mega MIDI board.
+
+Default AVRDUDE command is:
+avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
 #define FW_VERSION "1.1"
