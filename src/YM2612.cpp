@@ -205,6 +205,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
             }
             case 4:
             {
+              //OP.2 & OP.4
               send(0x44+i, velocity, a1);
               send(0x4C+i, velocity, a1);
               break;
