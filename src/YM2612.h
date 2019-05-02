@@ -21,6 +21,7 @@ private:
         bool sustained = false;
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
+        uint32_t index = 0;
     } Channel;
     uint8_t lfoFrq = 0;
     uint8_t lfoSens = 7;
