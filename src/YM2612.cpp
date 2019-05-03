@@ -187,7 +187,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
       openChannel = highestIndex;
     }
     chIndex++;
-    chIndex%= MAX_CHANNELS_YM;
+    chIndex %= MAX_CHANNELS_YM;
 
     uint8_t offset = openChannel % 3;
     bool setA1 = openChannel > 2;

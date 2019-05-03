@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.1"
+#define FW_VERSION "1.2"
 
 
 
@@ -68,10 +68,11 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
 
 //MIDI
-#define YM_VELOCITY_CHANNEL 1
-#define PSG_VELOCITY_CHANNEL 2
-#define YM_CHANNEL 3
-#define PSG_CHANNEL 4
+#define YM_CHANNEL 1
+#define PSG_CHANNEL 2
+#define YM_VELOCITY_CHANNEL 3
+#define PSG_VELOCITY_CHANNEL 4
+
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
