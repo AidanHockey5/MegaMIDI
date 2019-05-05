@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2"
+#define FW_VERSION "1.2.1"
 
 
 
@@ -114,6 +114,7 @@ File file;
 char fileName[MAX_FILE_NAME_SIZE];
 uint32_t numberOfFiles = 0;
 uint32_t currentFileNumber = 0;
+bool isFileValid = false;
 
 //Favorites
 uint8_t currentFavorite = 0xFF; //If favorite = 0xFF, go back to SD card voices
@@ -498,11 +499,20 @@ void LCDRedraw(uint8_t graphicCursorPos)
   fileScroll = fileName;
   lcd.print(fn);
   lcd.setCursor(1, 1);
-  lcd.print("Voice #");
-  lcd.print(currentProgram);
-  lcd.print("/");
-  lcd.print(maxValidVoices-1);
-  lcd.print("  ");
+  if(isFileValid)
+  {
+    lcd.print("Voice #");
+    lcd.print(currentProgram);
+    lcd.print("/");
+    lcd.print(maxValidVoices-1);
+    lcd.print("  ");
+  }
+  else
+  {
+    lcd.print("NO VOICES");
+  }
+  
+
   lcd.setCursor(15, 1);
   lcd.print("OCT");
   int8_t oct = ym2612.GetOctaveShift();
@@ -597,7 +607,16 @@ void ReadVoiceData()
   }
   if(!foundNoName)
     maxValidVoices = voiceCount;
-  Serial.println("Done Reading Voice Data");
+  if(voiceCount == 0)
+  {
+    isFileValid = false;
+    Serial.println("No voices found");
+  }
+  else
+  {
+    isFileValid = true;
+    Serial.println("Done Reading Voice Data");
+  }
 }
 
 void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM file
@@ -663,7 +682,8 @@ void KeyOn(byte channel, byte key, byte velocity)
 {
   if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
-    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
+    if(isFileValid || currentFavorite != 0xFF)
+      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
   }
   else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
@@ -922,6 +942,8 @@ void HandleFavoriteButtons(byte portValue)
       delay(1);
       if(i >= 2000 && !favoriteProgrammed)
       {
+        if(!isFileValid)
+          return;
         if(currentFavorite == 0xFF)
           currentFavorite = prevFavorite;
         ProgramNewFavorite();
