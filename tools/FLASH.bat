@@ -28,6 +28,7 @@ if "%speed%"=="3" goto flash3
 goto start 
 
 :reflash
+cd "..\..\tools\"
 echo Press any key to program again using the same settings.
 pause >nul
 if "%speed%"=="" goto flash1
@@ -38,19 +39,22 @@ if "%speed%"=="3" goto flash3
 
 :flash1
 @echo on
-.\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 19200 -U flash:w:"..\.pioenvs\teensy*\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
+cd "..\.pioenvs\teensy*\"
+.\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 19200 -U flash:w:"firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 @echo off
 goto reflash
 
 :flash2
 @echo on
-.\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 115200 -U flash:w:"..\.pioenvs\teensy*\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
+cd "..\.pioenvs\teensy*\"
+.\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 115200 -U flash:w:"firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 @echo off
 goto reflash
 
 :flash3
 @echo on
-.\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 1000000 -U flash:w:"..\.pioenvs\teensy*\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
+cd "..\.pioenvs\teensy*\"
+..\..\tools\FLASH_FIRMWARE\avrdude.exe -c arduino -p usb1286 -P COM%com% -b 1000000 -U flash:w:"firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 @echo off
 goto reflash
 

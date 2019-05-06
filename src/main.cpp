@@ -770,12 +770,12 @@ void HandleSerialIn()
         ProgramChange(YM_CHANNEL, currentProgram-1);
         return;
       }
-      case '>': //Move the entire keyboard up one ocatave for the YM2612
+      case '>': //Move the entire keyboard up one octave for the YM2612
       {
         ym2612.ShiftOctaveUp();
         return;
       }
-      case '<': //Move the entire keyboard down one ocatave for the YM2612
+      case '<': //Move the entire keyboard down one octave for the YM2612
       {
         ym2612.ShiftOctaveDown();
         return;
