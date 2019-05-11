@@ -22,7 +22,7 @@ One thing to note: This is a REALLY big collection of files. I don't recommend p
 
 I have included a windows-compiled binary of vgm2opm within the [tools](https://github.com/AidanHockey5/MegaMIDI/tree/master/tools) directory of this repository along with a batch-file to automatically execute the tool. To use this tool, simply place your desired .vgm/vgz files within the VGM_IN folder, double-click the CONVERT_VGM_OPM.bat file, then retrieve your OPM patch files in the OPM_OUT folder.
 
-# USB MIDI and Tradition DIN MIDI Compatible
+# USB MIDI and Traditional DIN MIDI Compatible
 Want to control The Mega MIDI through software like Ableton, FL Studio, or any other DAW? You can! The Mega MIDI will show up like any other MIDI-compatible instrument and is able to receive native USB MIDI commands without any sort of serial bridge. 
 Prefer old-school traditional 5-pin DIN MIDI instead? Go for it! Bust out that classic MIDI controller and plug it in with zero additional setup required.
 
