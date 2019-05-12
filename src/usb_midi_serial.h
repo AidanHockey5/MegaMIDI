@@ -43,7 +43,7 @@
 
 
 
-//usb_private.h example
+// usb_private.h example
 
 // #ifndef usb_serial_h__
 // #define usb_serial_h__
