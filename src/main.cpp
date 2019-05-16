@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.1"
+#define FW_VERSION "1.2.2"
 
 
 
@@ -232,7 +232,7 @@ void setup()
 
 void PutFavoriteIntoEEPROM(Voice v, uint16_t index)
 {
-  if(index >= 7)
+  if(index > 7)
     return;
   FavoriteVoice fv;
   fv.v = v;
