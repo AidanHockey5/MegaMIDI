@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.2"
+#define FW_VERSION "1.2.3"
 
 
 
@@ -457,20 +457,6 @@ void HandleRotaryButtonDown()
   lcdSelectionIndex++;
   lcdSelectionIndex %= 3;
   LCDRedraw(lcdSelectionIndex);
-  // if(lcdSelectionIndex == 2)
-  // {
-  //   lcd.setCursor(14, 1);
-  //   lcd.print(" ");
-  //   lcd.setCursor(14, 1);
-  //   LCDRedraw(lcdSelectionIndex);
-  // }
-  // else
-  // {
-  //   lcd.setCursor(0, lcdSelectionIndex);
-  //   lcd.print(" ");
-  //   lcd.setCursor(0, lcdSelectionIndex);
-  //   lcd.write((uint8_t)0); //Arrow Right
-  // }
 }
 
 void LCDRedraw(uint8_t graphicCursorPos)
@@ -480,11 +466,6 @@ void LCDRedraw(uint8_t graphicCursorPos)
   lcdSelectionIndex = graphicCursorPos;
   lcd.setCursor(0, lcdSelectionIndex);
   lcd.print(" ");
-  // if(graphicCursorPos == 2)
-  //   lcd.setCursor(14, 1);
-  // else
-  //   lcd.setCursor(graphicCursorPos, lcdSelectionIndex);
-  // lcd.write((uint8_t)0); //Arrow Right
   if(lcdSelectionIndex < 2)
   {
     lcd.setCursor(0, lcdSelectionIndex);
@@ -848,8 +829,8 @@ uint32_t prevMilli = 0;
 uint16_t scrollDelay = 500;
 void ScrollFileNameLCD()
 {
-  // if(lcdSelectionIndex != 0)
-  //   return;
+  if(lcdSelectionIndex != 0)
+    return;
   if(strlen(fileName) <= LCD_COLS-1)
     return;
   uint32_t curMilli = millis();
