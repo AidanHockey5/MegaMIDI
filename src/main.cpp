@@ -131,7 +131,6 @@ void BlinkLED(byte led);
 void ClearLCDLine(byte line);
 bool LoadFile(String req);
 void PutFavoriteIntoEEPROM(Voice v, uint16_t index);
-Voice GetFavoriteFromEEPROM(uint16_t index);
 void SetVoice(Voice v);
 void removeSVI();
 void ReadVoiceData();
@@ -146,6 +145,7 @@ void IntroLEDs();
 void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
+Voice GetFavoriteFromEEPROM(uint16_t index);
 
 void setup() 
 {
