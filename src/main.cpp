@@ -94,6 +94,7 @@ uint16_t fileNameScrollIndex = 0;
 String fileScroll;
 uint8_t lcdSelectionIndex = 0;
 LiquidCrystal lcd(17, 26, 38, 39, 40, 41, 42, 43, 44, 45); //PC7 & PB6 + Same data bus as sound chips
+bool redrawLCDOnNextLoop = false;
 
 //Clocks
 uint32_t masterClockFrequency = 8000000;
@@ -456,7 +457,7 @@ void HandleRotaryButtonDown()
 {
   lcdSelectionIndex++;
   lcdSelectionIndex %= 3;
-  LCDRedraw(lcdSelectionIndex);
+  redrawLCDOnNextLoop = true;
 }
 
 void LCDRedraw(uint8_t graphicCursorPos)
@@ -989,6 +990,11 @@ void loop()
   usbMIDI.read();
   MIDI.read();
   HandleRotaryEncoder();
+  if(redrawLCDOnNextLoop)
+  {
+    redrawLCDOnNextLoop = false;
+    LCDRedraw(lcdSelectionIndex);
+  }
   ScrollFileNameLCD();
   
   if(Serial.available() > 0)
