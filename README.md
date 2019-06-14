@@ -50,3 +50,7 @@ https://github.com/AidanHockey5/MegaMIDI/releases/
 
 Here is the schematic:
 ![Here is the schematic so far](https://github.com/AidanHockey5/MegaMIDI/raw/master/Schematic/YM2612_MIDI_SMD/YM2612_MIDI_SMD.png)
+
+# Amplifier Fix
+If you have been experiencing occasional amplifier static, try the fix documented here:
+https://github.com/AidanHockey5/MegaMIDI/issues/2
