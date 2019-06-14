@@ -49,4 +49,4 @@ Precompiled firmware HEX files can be found here:
 https://github.com/AidanHockey5/MegaMIDI/releases/
 
 Here is the schematic:
-![Here is the schematic so far](https://i.imgur.com/WZymTlD.jpg)
+![Here is the schematic so far](https://github.com/AidanHockey5/MegaMIDI/raw/master/Schematic/YM2612_MIDI_SMD/YM2612_MIDI_SMD.png)
