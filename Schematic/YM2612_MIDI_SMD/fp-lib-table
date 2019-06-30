@@ -8,4 +8,6 @@
   (lib (name custom_inductors)(type KiCad)(uri ${KIPRJMOD}/libs/custom_inductors.pretty)(options "")(descr ""))
   (lib (name MegaMIDI_FootprintCache)(type KiCad)(uri ${KIPRJMOD}/libs/MegaMIDI_FootprintCache.pretty)(options "")(descr ""))
   (lib (name customMicroSD)(type KiCad)(uri ${KIPRJMOD}/libs/customMicroSD.pretty)(options "")(descr ""))
+  (lib (name 35RAPC4BHN2)(type Legacy)(uri ${KIPRJMOD}/libs/35RAPC4BHN2.mod)(options "")(descr ""))
+  (lib (name "Boom Precision Elec PJ-307C")(type KiCad)(uri "${KIPRJMOD}/libs/Boom Precision Elec PJ-307C.pretty")(options "")(descr ""))
 )
