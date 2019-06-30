@@ -6,4 +6,5 @@
   (lib (name 3_5_TRS_Jack)(type Legacy)(uri ${KIPRJMOD}/libs/3_5_TRS_Jack.lib)(options "")(descr ""))
   (lib (name TPA3122D2)(type Legacy)(uri ${KIPRJMOD}/libs/TPA3122D2.lib)(options "")(descr ""))
   (lib (name SHOUDING)(type Legacy)(uri C:/Users/Aidan/Documents/Arduino/YM2612_MIDI/Schematic/YM2612_MIDI_SMD/libs/SHOUDING.lib)(options "")(descr ""))
+  (lib (name YM2612_MIDI_SMD-rescue)(type Legacy)(uri ${KIPRJMOD}/YM2612_MIDI_SMD-rescue.lib)(options "")(descr ""))
 )
