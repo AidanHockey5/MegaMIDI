@@ -27,7 +27,7 @@ Want to control The Mega MIDI through software like Ableton, FL Studio, or any o
 Prefer old-school traditional 5-pin DIN MIDI instead? Go for it! Bust out that classic MIDI controller and plug it in with zero additional setup required.
 
 # Crystal-Clear Amplification 
-One feature that was not implemented from the original Genesis was its abysmal amplification stage. Instead, it has been replaced with a custom mixer, pre-amp, and power amplification stage that provides beautifully clear audio directly from the sound chips. This analog stage is nearly identical to the one found in the [Mega Blaster project.](https://github.com/AidanHockey5/STM32_VGM_Player_YM2612_SN76489)
+Now featuring a modified version of the Mega Amp Mod! Beautifully clear amplification for both the YM3438 and the YM2612!
 
 # 7 "Favorite" Buttons to Quickly Swap Between Your Favorite Patches
 While you do have access to every .opm file on your Mega MIDI's SD card, sometimes you'll find the *perfect* patch that you'll want to keep for easy-access later. Simply hold-down one of the seven "favorite" buttons at the bottom of the board and your currently loaded patch will be saved into EEPROM. Because favorite patches are saved to EEPROM, you can access them instantaneously without any load times. Perfect for swapping patches on-the-fly!

@@ -3141,4 +3141,8 @@ Connection ~ 4900 6500
 Wire Wire Line
 	4900 6500 5150 6500
 NoConn ~ 4550 9000
+Text Notes 10000 4050 0    50   ~ 0
+YM3438 Remove:\nR20\nR22
+Text Notes 10000 4350 0    50   ~ 0
+YM3438 Change:\nR23, R26 51K
 $EndSCHEMATC
