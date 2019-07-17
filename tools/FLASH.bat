@@ -28,7 +28,7 @@ if "%speed%"=="3" goto flash3
 goto start 
 
 :reflash
-cd "..\..\tools\"
+cd "..\..\..\tools\"
 echo Press any key to program again using the same settings.
 pause >nul
 if "%speed%"=="" goto flash1
