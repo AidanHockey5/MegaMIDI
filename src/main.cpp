@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.4"
+#define FW_VERSION "1.2.5"
 
 
 
@@ -95,6 +95,7 @@ String fileScroll;
 uint8_t lcdSelectionIndex = 0;
 LiquidCrystal lcd(17, 26, 38, 39, 40, 41, 42, 43, 44, 45); //PC7 & PB6 + Same data bus as sound chips
 bool redrawLCDOnNextLoop = false;
+bool stopLCDFileUpdate = false;
 
 //Clocks
 uint32_t masterClockFrequency = 8000000;
@@ -662,6 +663,7 @@ void PitchChange(byte channel, int pitch)
 
 void KeyOn(byte channel, byte key, byte velocity)
 {
+  stopLCDFileUpdate = true;
   if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     if(isFileValid || currentFavorite != 0xFF)
@@ -803,6 +805,7 @@ void HandleRotaryEncoder()
       {
         LoadFile(isEncoderUp ? NEXT_FILE : PREV_FILE);
         currentFavorite = 0xFF;
+        stopLCDFileUpdate = false;
         LCDRedraw(lcdSelectionIndex);
         UpdateLEDs();
       break;
@@ -830,7 +833,7 @@ uint32_t prevMilli = 0;
 uint16_t scrollDelay = 500;
 void ScrollFileNameLCD()
 {
-  if(lcdSelectionIndex != 0)
+  if(lcdSelectionIndex != 0 || stopLCDFileUpdate)
     return;
   if(strlen(fileName) <= LCD_COLS-1)
     return;
