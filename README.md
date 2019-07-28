@@ -2,7 +2,9 @@
 
 https://www.aidanlawrence.com/mega-midi-a-playable-version-of-my-hardware-sega-genesis-synth/
 
-[May 2019 Instruction Manual](https://www.aidanlawrence.com/wp-content/uploads/2019/05/Mega_MIDI_Manual_May_2019.pdf)
+[July 2019 Instruction Manual](https://www.aidanlawrence.com/wp-content/uploads/2019/07/MegaMidi5Manual.pdf)
+
+[Store Link](https://www.aidanlawrence.com/product/mega-midi-5/)
 
 This project contains the source material for the Mega MIDI, a MIDI-controlled Sega Genesis/Megadrive Synthesizer that uses the genuine sound chips from the console itself. The primary FM sound source is the Yamaha YM2612, but I have also included the SN76489 PSG which was also present on the Sega Genesis. This synthesizer does not use emulated sound - it's the real deal. Therefore, you are limited to the limitations of the actual hardware, which I will explain in more detail down below.
 
@@ -50,7 +52,3 @@ https://github.com/AidanHockey5/MegaMIDI/releases/
 
 Here is the schematic:
 ![Here is the schematic so far](https://github.com/AidanHockey5/MegaMIDI/raw/master/Schematic/YM2612_MIDI_SMD/YM2612_MIDI_SMD.png)
-
-# Amplifier Fix
-If you have been experiencing occasional amplifier static, try the fix documented here:
-https://github.com/AidanHockey5/MegaMIDI/issues/2
