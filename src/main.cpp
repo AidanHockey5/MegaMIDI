@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.5"
+#define FW_VERSION "1.2.6"
 
 
 
@@ -72,6 +72,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define PSG_CHANNEL 2
 #define YM_VELOCITY_CHANNEL 3
 #define PSG_VELOCITY_CHANNEL 4
+#define PSG_NOISE_CHANNEL 5
 
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
@@ -673,6 +674,10 @@ void KeyOn(byte channel, byte key, byte velocity)
   {
     sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
   }
+  else if(channel == PSG_NOISE_CHANNEL)
+  {
+    sn76489.SetNoiseOn(key, velocity, 1);
+  }
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
@@ -685,14 +690,22 @@ void KeyOff(byte channel, byte key, byte velocity)
   {
     sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
   }
+  else if(channel == PSG_NOISE_CHANNEL)
+  {
+    sn76489.SetNoiseOff(key);
+  }
 }
 
 void ControlChange(byte channel, byte control, byte value)
 {
   //Serial.print("CONTROL: "); Serial.print("CH:"); Serial.print(channel); Serial.print("CNT:"); Serial.print(control); Serial.print("VALUE:"); Serial.println(value);
-  if(control == 0x01)
+  if(control == 0x01 && (channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL))
   {
     ym2612.AdjustLFO(value);
+  }
+  else if(control == 0x01 && channel == PSG_NOISE_CHANNEL)
+  {
+    sn76489.MIDISetNoiseControl(0x01, value);
   }
   else if(control == 0x40) //Sustain
   {
@@ -1006,3 +1019,4 @@ void loop()
   if(portARead)
     HandleFavoriteButtons(portARead);
 }
+ 

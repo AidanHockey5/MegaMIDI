@@ -1,5 +1,7 @@
 #include "SN76489.h"
 
+//Referenced from https://github.com/cdodd/teensy-sn76489-midi-synth/blob/master/teensy-sn76489-midi-synth.ino
+
 SN76489::SN76489()
 {
     DDRF = 0xFF;
@@ -32,6 +34,86 @@ void SN76489::send(uint8_t data)
     delayMicroseconds(25);
     digitalWriteFast(_WE, HIGH);
 }
+
+
+void SN76489::MIDISetNoiseControl(byte control, byte value)
+{
+    SetSquareFrequency(2, ((127 - value) << 3) + 1);
+}
+
+bool SN76489::UpdateNoiseControl()
+{
+    byte noiseControlData;
+
+    switch (currentNote[noise]) 
+    {
+        case 60:
+            // Note: C4, Periodic noise, shift rate = clock speed (Hz) / 512
+            noiseControlData = 0x00;
+            break;
+
+        case 62:
+            // Note: D4, Periodic noise, shift rate = clock speed (Hz) / 1024
+            noiseControlData = 0x01;
+            break;
+
+        case 64:
+            // Note: E4, Periodic noise, shift rate = clock speed (Hz) / 2048
+            noiseControlData = 0x02;
+            break;
+
+        case 65:
+            // Note: F4, Perioic noise, shift rate = Square voice 3 frequency
+            noiseControlData = 0x03;
+            break;
+
+        case 67:
+            // Note: G4, White noise, shift rate = clock speed (Hz) / 512
+            noiseControlData = 0x04;
+            break;
+
+        case 69:
+            // Note: A4, White noise, shift rate = clock speed (Hz) / 1024
+            noiseControlData = 0x05;
+            break;
+
+        case 71:
+            // Note: B4, White noise, shift rate = clock speed (Hz) / 2048
+            noiseControlData = 0x06;
+            break;
+
+        case 72:
+            // Note: C5, White noise, shift rate = Square voice 3 frequency
+            noiseControlData = 0x07;
+            break;
+
+        default:
+            return false;
+    }
+
+    // Send the noise control byte to the SN76489 and return true
+    send(0x80 | 0x60 | noiseControlData);
+    return true;
+}
+
+void SN76489::SetNoiseOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
+{
+    currentVelocity[noise] = 127;
+    currentNote[noise] = key;
+    bool updateAttenuationFlag = UpdateNoiseControl();
+    if(updateAttenuationFlag)
+        UpdateAttenuation(noise);
+}
+
+void SN76489::SetNoiseOff(uint8_t key)
+{
+    currentVelocity[noise] = 0;
+    currentNote[noise] = key;
+    bool updateAttenuationFlag = UpdateNoiseControl();
+    if(updateAttenuationFlag)
+        UpdateAttenuation(noise);
+}
+
 
 void SN76489::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
 {
