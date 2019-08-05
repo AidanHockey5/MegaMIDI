@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.6"
+#define FW_VERSION "1.2.7"
 
 
 
@@ -135,7 +135,7 @@ void ClearLCDLine(byte line);
 bool LoadFile(String req);
 void PutFavoriteIntoEEPROM(Voice v, uint16_t index);
 void SetVoice(Voice v);
-void removeSVI();
+void removeMeta();
 void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
@@ -224,8 +224,8 @@ void setup()
     Serial.println("SD Mount failed!");
     SDReadFailure();
   }
+  removeMeta();
   attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
-  removeSVI();
   LoadFile(FIRST_FILE);
   ReadVoiceData();
   ym2612.SetVoice(voices[0]);
@@ -439,20 +439,31 @@ bool LoadFile(String req) //Request a file (string) to load
   return true;
 }
 
-void removeSVI() //Sometimes, Windows likes to place invisible files in our SD card without asking... GTFO!
+void removeMeta() //Remove useless meta files
 {
-  File nextFile;
-  nextFile.openNext(SD.vwd(), O_READ);
-  char name[MAX_FILE_NAME_SIZE];
-  nextFile.getName(name, MAX_FILE_NAME_SIZE);
-  String n = String(name);
-  if(n == "System Volume Information")
+  File countFile;
+
+  while ( countFile.openNext( SD.vwd(), O_READ ))
   {
-      if(!nextFile.rmRfStar())
-        Serial.println("Failed to remove SVI file");
+    memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+    countFile.getName(fileName, MAX_FILE_NAME_SIZE);
+    if(fileName[0]=='.')
+    {
+      if(!SD.remove(fileName))
+      if(!countFile.rmRfStar())
+      {
+        Serial.print("FAILED TO DELETE META FILE"); Serial.println(fileName);
+      }
+    }
+    if(String(fileName) == "System Volume Information")
+    {
+      if(!countFile.rmRfStar())
+        Serial.println("FAILED TO REMOVE SVI");
+    }
+    countFile.close();
   }
+  countFile.close();
   SD.vwd()->rewind();
-  nextFile.close();
 }
 
 void HandleRotaryButtonDown()
