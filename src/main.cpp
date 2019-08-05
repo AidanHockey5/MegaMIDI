@@ -441,28 +441,27 @@ bool LoadFile(String req) //Request a file (string) to load
 
 void removeMeta() //Remove useless meta files
 {
-  File countFile;
-
-  while ( countFile.openNext( SD.vwd(), O_READ ))
+  File tmpFile;
+  while ( tmpFile.openNext( SD.vwd(), O_READ ))
   {
     memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
-    countFile.getName(fileName, MAX_FILE_NAME_SIZE);
+    tmpFile.getName(fileName, MAX_FILE_NAME_SIZE);
     if(fileName[0]=='.')
     {
       if(!SD.remove(fileName))
-      if(!countFile.rmRfStar())
+      if(!tmpFile.rmRfStar())
       {
         Serial.print("FAILED TO DELETE META FILE"); Serial.println(fileName);
       }
     }
     if(String(fileName) == "System Volume Information")
     {
-      if(!countFile.rmRfStar())
+      if(!tmpFile.rmRfStar())
         Serial.println("FAILED TO REMOVE SVI");
     }
-    countFile.close();
+    tmpFile.close();
   }
-  countFile.close();
+  tmpFile.close();
   SD.vwd()->rewind();
 }
 
