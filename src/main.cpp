@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.7"
+#define FW_VERSION "1.3"
 
 
 
@@ -63,6 +63,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 #include "LCDChars.h"
+#include "NPRM.h"
 
 //Music
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
@@ -73,6 +74,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define YM_VELOCITY_CHANNEL 3
 #define PSG_VELOCITY_CHANNEL 4
 #define PSG_NOISE_CHANNEL 5
+NPRM nprm;
 
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
@@ -128,6 +130,7 @@ void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
 void PitchChange(byte channel, int pitch);
 void ControlChange(byte channel, byte control, byte value);
+void SystemExclusive(byte *data, uint16_t length);
 void HandleFavoriteButtons(byte portValue);
 bool LoadFile(byte strategy);
 void BlinkLED(byte led);
@@ -148,6 +151,7 @@ void IntroLEDs();
 void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
+void HandleNPRM(uint8_t channel);
 Voice GetFavoriteFromEEPROM(uint16_t index);
 
 void setup() 
@@ -193,6 +197,7 @@ void setup()
   usbMIDI.setHandleProgramChange(ProgramChange);
   usbMIDI.setHandlePitchChange(PitchChange);
   usbMIDI.setHandleControlChange(ControlChange);
+  usbMIDI.setHandleSystemExclusive(SystemExclusive);
 
   MIDI.setHandleNoteOn(KeyOn);
   MIDI.setHandleNoteOff(KeyOff);
@@ -730,6 +735,39 @@ void ControlChange(byte channel, byte control, byte value)
       PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
   }
+  else
+  {
+    switch (control) //NRPN to control synth manually
+    {
+      case 99:
+      nprm.parameter = value << 7;
+      break;
+      case 98:
+      nprm.parameter += value;
+      break;
+      case 6:
+      nprm.value = value << 7;
+      break;
+      case 38:
+      nprm.value = nprm.value + value;
+
+      //Handle NPRM
+      Serial.print("NPRM --- "); Serial.print("PARAM: "); Serial.print(nprm.parameter); Serial.print("   "); Serial.print("VALUE: "); Serial.println(nprm.value);
+
+      if(channel != 0)
+        channel--;
+
+      HandleNPRM(channel);
+      break;
+      default:
+      return;
+    }
+  }
+}
+
+void SystemExclusive(byte *data, uint16_t length)
+{
+  Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
 }
 
 uint8_t lastProgram = 0;
@@ -756,6 +794,11 @@ void HandleSerialIn()
     char serialCmd = Serial.read();
     switch(serialCmd)
     {
+      case 't':
+      {
+
+        return;
+      }
       case 'o': //Dump current voice operator info
       {
         Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
@@ -1009,6 +1052,171 @@ void ProgramNewFavorite()
   LCDRedraw(lcdSelectionIndex);
   BlinkLED(currentFavorite);
   digitalWriteFast(leds[currentFavorite], HIGH);
+}
+
+void HandleNPRM(uint8_t channel)
+{
+  uint8_t op = ((nprm.parameter/10)%10)-1;
+  switch(nprm.parameter)
+  {
+    case 10:
+    case 20:
+    case 30:
+    case 40:
+      ym2612.SetDetune(channel, op, nprm.value);
+      break;
+    case 11:
+    case 21:
+    case 31:
+    case 41:
+      ym2612.SetMult(channel, op, nprm.value);
+      break;
+    case 12:
+    case 22:
+    case 32:
+    case 42:
+      ym2612.SetTL(channel, op, nprm.value);
+      break;
+    case 13:
+    case 23:
+    case 33:
+    case 43:
+      ym2612.SetAR(channel, op, nprm.value);
+      break;
+    case 14:
+    case 24:
+    case 34:
+    case 44:
+      ym2612.SetD1R(channel, op, nprm.value);
+      break;
+    case 15:
+    case 25:
+    case 35:
+    case 45:
+      ym2612.SetD1L(channel, op, nprm.value);
+      break;
+    case 16:
+    case 26:
+    case 36:
+    case 46:
+      ym2612.SetD2R(channel, op, nprm.value);
+      break;
+    case 17:
+    case 27:
+    case 37:
+    case 47:
+      ym2612.SetRR(channel, op, nprm.value);
+      break;
+    case 18:
+    case 28:
+    case 38:
+    case 48:
+      ym2612.SetRateScaling(channel, op, nprm.value);
+      break;  
+    case 19:
+    case 29:
+    case 39:
+    case 49:
+      ym2612.SetAmplitudeModulation(channel, op, nprm.value > 63);
+      break;  
+    
+
+    // case 12:
+    // ym2612.SetTL(channel, 0, nprm.value);
+    // break;
+    // case 22:
+    // ym2612.SetTL(channel, 1, nprm.value);
+    // break;
+    // case 32:
+    // ym2612.SetTL(channel, 2, nprm.value);
+    // break;
+    // case 42:
+    // ym2612.SetTL(channel, 3, nprm.value);
+    // break;
+
+    // case 13:
+    // ym2612.SetAR(channel, 0, nprm.value);
+    // break;
+    // case 23:
+    // ym2612.SetAR(channel, 1, nprm.value);
+    // break;
+    // case 33:
+    // ym2612.SetAR(channel, 2, nprm.value);
+    // break;
+    // case 43:
+    // ym2612.SetAR(channel, 3, nprm.value);
+    // break;
+
+    // case 14:
+    // ym2612.SetD1R(channel, 0, nprm.value);
+    // break;
+    // case 24:
+    // ym2612.SetD1R(channel, 1, nprm.value);
+    // break;
+    // case 34:
+    // ym2612.SetD1R(channel, 2, nprm.value);
+    // break;
+    // case 44:
+    // ym2612.SetD1R(channel, 3, nprm.value);
+    // break;
+
+    // case 15:
+    // ym2612.SetD1L(channel, 0, nprm.value);
+    // break;
+    // case 25:
+    // ym2612.SetD1L(channel, 1, nprm.value);
+    // break;
+    // case 35:
+    // ym2612.SetD1L(channel, 2, nprm.value);
+    // break;
+    // case 45:
+    // ym2612.SetD1L(channel, 3, nprm.value);
+    // break;
+
+    // case 16:
+    // ym2612.SetD2R(channel, 0, nprm.value);
+    // break;
+    // case 26:
+    // ym2612.SetD2R(channel, 1, nprm.value);
+    // break;
+    // case 36:
+    // ym2612.SetD2R(channel, 2, nprm.value);
+    // break;
+    // case 46:
+    // ym2612.SetD2R(channel, 3, nprm.value);
+    // break;
+
+    // case 17:
+    // ym2612.SetRR(channel, 0, nprm.value);
+    // break;
+    // case 27:
+    // ym2612.SetRR(channel, 1, nprm.value);
+    // break;
+    // case 37:
+    // ym2612.SetRR(channel, 2, nprm.value);
+    // break;
+    // case 47:
+    // ym2612.SetRR(channel, 3, nprm.value);
+    // break;
+
+    // case 19:
+    // ym2612.SetAmplitudeModulation(channel, 0, nprm.value > 63);
+    // break;
+    // case 29:
+    // ym2612.SetAmplitudeModulation(channel, 1, nprm.value > 63);
+    // break;
+    // case 39:
+    // ym2612.SetAmplitudeModulation(channel, 2, nprm.value > 63);
+    // break;
+    // case 49:
+    // ym2612.SetAmplitudeModulation(channel, 3, nprm.value > 63);
+    // break;   
+
+    default:
+    Serial.println("NPRM DEFAULT");
+    break;
+
+  }
 }
 
 void loop() 

@@ -531,6 +531,163 @@ uint16_t YM2612::CalcFNumber(float note)
   return (144*note*(pow(2, 20))/clockFrq) / pow(2, 4-1);
 }
 
+//DRY OMEGALUL
+void YM2612::SetTL(uint8_t slot, uint8_t op, uint8_t value)
+{
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x40 + (0x04*op))+slot;
+  send(addr, value, a1);
+}
+
+void YM2612::SetAR(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x1F)
+    value = 0x1F;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x50 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x11100000; //Mask RS
+  data |= value; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetD1R(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x1F)
+    value = 0x1F;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x60 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x10000000; //Mask AM
+  data |= value; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetD1L(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x0F)
+    value = 0x0F;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x80 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x00001111; //Mask RR
+  data |= value << 4; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetD2R(uint8_t slot, uint8_t op, uint8_t value)
+{
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x70 + (0x04*op))+slot;
+  send(addr, value, a1);
+}
+
+void YM2612::SetRR(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x0F)
+    value = 0x0F;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x80 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x11110000; //Mask D1L
+  data |= value; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetDetune(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x07)
+    value = 0x07;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x30 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x00001111; //Mask MUL
+  data |= value << 4; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetMult(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x0F)
+    value = 0x0F;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x30 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x01110000; //Mask DT1
+  data |= value; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetRateScaling(uint8_t slot, uint8_t op, uint8_t value)
+{
+  if(value > 0x03)
+    value = 0x03;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x50 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x00011111; //Mask AR
+  data |= value << 6; 
+  send(addr, data, a1);
+}
+
+void YM2612::SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value)
+{
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = (0x60 + (0x04*op))+slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x01111111; //Mask AR
+  data |= value << 7;
+  send(addr, data, a1);
+}
+
+void SetLFOEnabled(bool value)
+{
+
+}
+
+void SetLFOFreq(bool value)
+{
+
+}
+
+void SetFreqModSens(uint8_t value)
+{
+
+}
+
+void SetAlgo(uint8_t value)
+{
+
+}
+
+void SetAMSens(uint8_t value)
+{
+
+}
+
+void SetFMFeedback(uint8_t value)
+{
+  
+}
+
 //Notes
 // DIGITAL BUS = PF0-PF7
 // IC = PC0/10
