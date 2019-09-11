@@ -76,7 +76,6 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define PSG_NOISE_CHANNEL 5
 NPRM nprm;
 
-
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
 //DEBUG
@@ -680,34 +679,48 @@ void PitchChange(byte channel, int pitch)
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+  if(phonicMode == MONO)
   {
-    if(isFileValid || currentFavorite != 0xFF)
-      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
+    if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+    {
+      if(isFileValid || currentFavorite != 0xFF)
+        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
+    }
+    else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
+    {
+      sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
+    }
+    else if(channel == PSG_NOISE_CHANNEL)
+    {
+      sn76489.SetNoiseOn(key, velocity, 1);
+    }
   }
-  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
+  else
   {
-    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
-  }
-  else if(channel == PSG_NOISE_CHANNEL)
-  {
-    sn76489.SetNoiseOn(key, velocity, 1);
+    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel);
   }
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+  if(phonicMode == MONO)
   {
-    ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
+    if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+    {
+      ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
+    }
+    else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
+    {
+      sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
+    }
+    else if(channel == PSG_NOISE_CHANNEL)
+    {
+      sn76489.SetNoiseOff(key);
+    }
   }
-  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
+  else
   {
-    sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
-  }
-  else if(channel == PSG_NOISE_CHANNEL)
-  {
-    sn76489.SetNoiseOff(key);
+    ym2612.SetChannelOff(channel);
   }
 }
 
@@ -734,6 +747,16 @@ void ControlChange(byte channel, byte control, byte value)
       PSGsustainEnabled = (value >= 64);
       PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
+  }
+  else if(control == 0x7E)
+  {
+    phonicMode = MONO;
+    Serial.println("SET MODE TO MONO");
+  }
+  else if(control == 0x7F)
+  {
+    phonicMode = POLY;
+    Serial.println("SET MODE TO POLY");
   }
   else
   {
@@ -1059,91 +1082,97 @@ void HandleNPRM(uint8_t channel)
   uint8_t op = ((nprm.parameter/10)%10)-1;
   const uint8_t opmap[4] = {0, 2, 1, 3};
   op = opmap[op];
-  switch(nprm.parameter)
+  for(int i = 0; i < (phonicMode == MONO ? MAX_CHANNELS_YM : 1); i++)
   {
-    case 8:
-      ym2612.SetAlgo(channel, nprm.value);
-      break;
-    case 9:
-      ym2612.SetFMFeedback(channel, nprm.value);
-      break;
-    case 10:
-    case 20:
-    case 30:
-    case 40:
-      ym2612.SetDetune(channel, op, nprm.value);
-      break;
-    case 11:
-    case 21:
-    case 31:
-    case 41:
-      ym2612.SetMult(channel, op, nprm.value);
-      break;
-    case 12:
-    case 22:
-    case 32:
-    case 42:
-      ym2612.SetTL(channel, op, nprm.value);
-      break;
-    case 13:
-    case 23:
-    case 33:
-    case 43:
-      ym2612.SetAR(channel, op, nprm.value);
-      break;
-    case 14:
-    case 24:
-    case 34:
-    case 44:
-      ym2612.SetD1R(channel, op, nprm.value);
-      break;
-    case 15:
-    case 25:
-    case 35:
-    case 45:
-      ym2612.SetD1L(channel, op, nprm.value);
-      break;
-    case 16:
-    case 26:
-    case 36:
-    case 46:
-      ym2612.SetD2R(channel, op, nprm.value);
-      break;
-    case 17:
-    case 27:
-    case 37:
-    case 47:
-      ym2612.SetRR(channel, op, nprm.value);
-      break;
-    case 18:
-    case 28:
-    case 38:
-    case 48:
-      ym2612.SetRateScaling(channel, op, nprm.value);
-      break;  
-    case 19:
-    case 29:
-    case 39:
-    case 49:
-      ym2612.SetAmplitudeModulation(channel, op, nprm.value > 63);
-      break;  
-    case 50:
-      ym2612.SetLFOEnabled(nprm.value > 63);
-      break;
-    case 51:
-      ym2612.SetLFOFreq(nprm.value);
-      break;
-    case 52:
-      ym2612.SetFreqModSens(channel, nprm.value);
-      break;
-    case 53:
-      ym2612.SetAMSens(channel, nprm.value);
-      break;
-    default:
-    Serial.println("NPRM DEFAULT");
-    break;
+    if(phonicMode == MONO)
+      channel = i;
+    switch(nprm.parameter)
+      {
+        case 8:
+          ym2612.SetAlgo(channel, nprm.value);
+          break;
+        case 9:
+          ym2612.SetFMFeedback(channel, nprm.value);
+          break;
+        case 10:
+        case 20:
+        case 30:
+        case 40:
+          ym2612.SetDetune(channel, op, nprm.value);
+          break;
+        case 11:
+        case 21:
+        case 31:
+        case 41:
+          ym2612.SetMult(channel, op, nprm.value);
+          break;
+        case 12:
+        case 22:
+        case 32:
+        case 42:
+          ym2612.SetTL(channel, op, nprm.value);
+          break;
+        case 13:
+        case 23:
+        case 33:
+        case 43:
+          ym2612.SetAR(channel, op, nprm.value);
+          break;
+        case 14:
+        case 24:
+        case 34:
+        case 44:
+          ym2612.SetD1R(channel, op, nprm.value);
+          break;
+        case 15:
+        case 25:
+        case 35:
+        case 45:
+          ym2612.SetD1L(channel, op, nprm.value);
+          break;
+        case 16:
+        case 26:
+        case 36:
+        case 46:
+          ym2612.SetD2R(channel, op, nprm.value);
+          break;
+        case 17:
+        case 27:
+        case 37:
+        case 47:
+          ym2612.SetRR(channel, op, nprm.value);
+          break;
+        case 18:
+        case 28:
+        case 38:
+        case 48:
+          ym2612.SetRateScaling(channel, op, nprm.value);
+          break;  
+        case 19:
+        case 29:
+        case 39:
+        case 49:
+          ym2612.SetAmplitudeModulation(channel, op, nprm.value > 63);
+          break;  
+        case 50:
+          ym2612.SetLFOEnabled(nprm.value > 63);
+          break;
+        case 51:
+          ym2612.SetLFOFreq(nprm.value);
+          break;
+        case 52:
+          ym2612.SetFreqModSens(channel, nprm.value);
+          break;
+        case 53:
+          ym2612.SetAMSens(channel, nprm.value);
+          break;
+        default:
+        Serial.println("NPRM DEFAULT");
+        break;
+      }
+    }
   }
-}
+  
 
 void loop() 
 {

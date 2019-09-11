@@ -15,4 +15,11 @@ typedef struct
     signed char octaveShift = 0;
 } FavoriteVoice;
 
+enum PhonicMode
+{
+    MONO, POLY
+};
+
+static PhonicMode phonicMode = MONO;
+
 #endif
