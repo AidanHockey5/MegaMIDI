@@ -69,10 +69,10 @@ public:
     //Globals
     void SetLFOEnabled(bool value);
     void SetLFOFreq(bool value);
-    void SetFreqModSens(uint8_t value);
-    void SetAlgo(uint8_t value);
-    void SetAMSens(uint8_t value);
-    void SetFMFeedback(uint8_t value);
+    void SetFreqModSens(uint8_t slot, uint8_t value);
+    void SetAlgo(uint8_t slot, uint8_t value);
+    void SetAMSens(uint8_t slot, uint8_t value);
+    void SetFMFeedback(uint8_t slot, uint8_t value);
 
 };
 #endif

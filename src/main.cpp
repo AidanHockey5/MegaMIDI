@@ -1057,8 +1057,16 @@ void ProgramNewFavorite()
 void HandleNPRM(uint8_t channel)
 {
   uint8_t op = ((nprm.parameter/10)%10)-1;
+  const uint8_t opmap[4] = {0, 2, 1, 3};
+  op = opmap[op];
   switch(nprm.parameter)
   {
+    case 8:
+      ym2612.SetAlgo(channel, nprm.value);
+      break;
+    case 9:
+      ym2612.SetFMFeedback(channel, nprm.value);
+      break;
     case 10:
     case 20:
     case 30:
@@ -1119,103 +1127,21 @@ void HandleNPRM(uint8_t channel)
     case 49:
       ym2612.SetAmplitudeModulation(channel, op, nprm.value > 63);
       break;  
-    
-
-    // case 12:
-    // ym2612.SetTL(channel, 0, nprm.value);
-    // break;
-    // case 22:
-    // ym2612.SetTL(channel, 1, nprm.value);
-    // break;
-    // case 32:
-    // ym2612.SetTL(channel, 2, nprm.value);
-    // break;
-    // case 42:
-    // ym2612.SetTL(channel, 3, nprm.value);
-    // break;
-
-    // case 13:
-    // ym2612.SetAR(channel, 0, nprm.value);
-    // break;
-    // case 23:
-    // ym2612.SetAR(channel, 1, nprm.value);
-    // break;
-    // case 33:
-    // ym2612.SetAR(channel, 2, nprm.value);
-    // break;
-    // case 43:
-    // ym2612.SetAR(channel, 3, nprm.value);
-    // break;
-
-    // case 14:
-    // ym2612.SetD1R(channel, 0, nprm.value);
-    // break;
-    // case 24:
-    // ym2612.SetD1R(channel, 1, nprm.value);
-    // break;
-    // case 34:
-    // ym2612.SetD1R(channel, 2, nprm.value);
-    // break;
-    // case 44:
-    // ym2612.SetD1R(channel, 3, nprm.value);
-    // break;
-
-    // case 15:
-    // ym2612.SetD1L(channel, 0, nprm.value);
-    // break;
-    // case 25:
-    // ym2612.SetD1L(channel, 1, nprm.value);
-    // break;
-    // case 35:
-    // ym2612.SetD1L(channel, 2, nprm.value);
-    // break;
-    // case 45:
-    // ym2612.SetD1L(channel, 3, nprm.value);
-    // break;
-
-    // case 16:
-    // ym2612.SetD2R(channel, 0, nprm.value);
-    // break;
-    // case 26:
-    // ym2612.SetD2R(channel, 1, nprm.value);
-    // break;
-    // case 36:
-    // ym2612.SetD2R(channel, 2, nprm.value);
-    // break;
-    // case 46:
-    // ym2612.SetD2R(channel, 3, nprm.value);
-    // break;
-
-    // case 17:
-    // ym2612.SetRR(channel, 0, nprm.value);
-    // break;
-    // case 27:
-    // ym2612.SetRR(channel, 1, nprm.value);
-    // break;
-    // case 37:
-    // ym2612.SetRR(channel, 2, nprm.value);
-    // break;
-    // case 47:
-    // ym2612.SetRR(channel, 3, nprm.value);
-    // break;
-
-    // case 19:
-    // ym2612.SetAmplitudeModulation(channel, 0, nprm.value > 63);
-    // break;
-    // case 29:
-    // ym2612.SetAmplitudeModulation(channel, 1, nprm.value > 63);
-    // break;
-    // case 39:
-    // ym2612.SetAmplitudeModulation(channel, 2, nprm.value > 63);
-    // break;
-    // case 49:
-    // ym2612.SetAmplitudeModulation(channel, 3, nprm.value > 63);
-    // break;   
-
+    case 50:
+      ym2612.SetLFOEnabled(nprm.value > 63);
+      break;
+    case 51:
+      ym2612.SetLFOFreq(nprm.value);
+      break;
+    case 52:
+      ym2612.SetFreqModSens(channel, nprm.value);
+      break;
+    case 53:
+      ym2612.SetAMSens(channel, nprm.value);
+      break;
     default:
     Serial.println("NPRM DEFAULT");
     break;
-
   }
 }
 

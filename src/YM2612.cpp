@@ -658,34 +658,81 @@ void YM2612::SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value)
   send(addr, data, a1);
 }
 
-void SetLFOEnabled(bool value)
+void YM2612::SetLFOEnabled(bool value)
 {
-
+  uint8_t data = GetShadowValue(0x22, 0);
+  data &= 0x11110111; //Mask LFOFrq
+  data |= value << 3;
+  send(0x22, data, false);
 }
 
-void SetLFOFreq(bool value)
+void YM2612::SetLFOFreq(bool value)
 {
-
+  value = map(value, 0, 127, 0, 7);
+  uint8_t data = GetShadowValue(0x22, 0);
+  data &= 0x11111000; //Mask LFOEnable
+  data |= value;
+  send(0x22, data, false);
 }
 
-void SetFreqModSens(uint8_t value)
+void YM2612::SetFreqModSens(uint8_t slot, uint8_t value)
 {
+  value = map(value, 0, 127, 0, 7);
+  if(value > 0x07)
+    value = 0x07;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = 0xB4 + slot;
+  uint8_t data = GetShadowValue(addr, a1);
 
+  data &= 0x11111000; //Mask L_R_AMS
+  data |= value;
+  send(addr, data, a1);
 }
 
-void SetAlgo(uint8_t value)
+void YM2612::SetAMSens(uint8_t slot, uint8_t value)
 {
+  value = map(value, 0, 127, 0, 7);
+  if(value > 0x07)
+    value = 0x07;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = 0xB4 + slot;
+  uint8_t data = GetShadowValue(addr, a1);
 
+  data &= 0x11000111; //Mask L_R_FMS
+  data |= value << 3;
+  send(addr, data, a1);
 }
 
-void SetAMSens(uint8_t value)
+void YM2612::SetAlgo(uint8_t slot, uint8_t value)
 {
+  value = map(value, 0, 127, 0, 7);
+  if(value > 0x07)
+    value = 0x07;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = 0xB0 + slot;
+  uint8_t data = GetShadowValue(addr, a1);
 
+  data &= 0x11111000; //Mask feedback
+  data |= value;
+  send(addr, data, a1);
 }
 
-void SetFMFeedback(uint8_t value)
+void YM2612::SetFMFeedback(uint8_t slot, uint8_t value)
 {
-  
+  value = map(value, 0, 127, 0, 7);
+  if(value > 0x07)
+    value = 0x07;
+  bool a1 = (slot > 2); 
+  slot %= 3;
+  uint8_t addr = 0xB0 + slot;
+  uint8_t data = GetShadowValue(addr, a1);
+
+  data &= 0x11000111; //Mask Algo
+  data |= value << 3;
+  send(addr, data, a1);
 }
 
 //Notes
