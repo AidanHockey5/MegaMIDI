@@ -775,7 +775,7 @@ void ControlChange(byte channel, byte control, byte value)
       nprm.value = nprm.value + value;
 
       //Handle NPRM
-      Serial.print("NPRM --- "); Serial.print("PARAM: "); Serial.print(nprm.parameter); Serial.print("   "); Serial.print("VALUE: "); Serial.println(nprm.value);
+      //Serial.print("NPRM --- "); Serial.print("PARAM: "); Serial.print(nprm.parameter); Serial.print("   "); Serial.print("VALUE: "); Serial.println(nprm.value);
 
       if(channel != 0)
         channel--;
@@ -817,11 +817,6 @@ void HandleSerialIn()
     char serialCmd = Serial.read();
     switch(serialCmd)
     {
-      case 't':
-      {
-
-        return;
-      }
       case 'o': //Dump current voice operator info
       {
         Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
@@ -1166,6 +1161,16 @@ void HandleNPRM(uint8_t channel)
         case 53:
           ym2612.SetAMSens(channel, nprm.value);
           break;
+        case 54:
+          ym2612.SetAlgo(channel, nprm.value);
+          break;
+        case 55:
+          ym2612.SetFMFeedback(channel, nprm.value);
+          break;
+
+        case 57:
+          ym2612.Reset();
+          break;
         default:
         Serial.println("NPRM DEFAULT");
         break;
@@ -1176,7 +1181,8 @@ void HandleNPRM(uint8_t channel)
 
 void loop() 
 {
-  usbMIDI.read();
+  //usbMIDI.read();
+  while (usbMIDI.read()) {};
   MIDI.read();
   HandleRotaryEncoder();
   if(redrawLCDOnNextLoop)
