@@ -1075,20 +1075,12 @@ void ProgramNewFavorite()
 void HandleNPRM(uint8_t channel)
 {
   uint8_t op = ((nprm.parameter/10)%10)-1;
-  const uint8_t opmap[4] = {0, 2, 1, 3};
-  op = opmap[op];
   for(int i = 0; i < (phonicMode == MONO ? MAX_CHANNELS_YM : 1); i++)
   {
     if(phonicMode == MONO)
       channel = i;
     switch(nprm.parameter)
       {
-        case 8:
-          ym2612.SetAlgo(channel, nprm.value);
-          break;
-        case 9:
-          ym2612.SetFMFeedback(channel, nprm.value);
-          break;
         case 10:
         case 20:
         case 30:
@@ -1123,13 +1115,13 @@ void HandleNPRM(uint8_t channel)
         case 25:
         case 35:
         case 45:
-          ym2612.SetD1L(channel, op, nprm.value);
+          ym2612.SetD2R(channel, op, nprm.value);
           break;
         case 16:
         case 26:
         case 36:
         case 46:
-          ym2612.SetD2R(channel, op, nprm.value);
+          ym2612.SetD1L(channel, op, nprm.value);
           break;
         case 17:
         case 27:

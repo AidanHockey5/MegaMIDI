@@ -566,7 +566,7 @@ void YM2612::SetAR(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x50 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11100000; //Mask RS
+  data &= 0b11100000; //Mask RS
   data |= value; 
   send(addr, data, a1);
 }
@@ -580,7 +580,7 @@ void YM2612::SetD1R(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x60 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x10000000; //Mask AM
+  data &= 0b10000000; //Mask AM
   data |= value; 
   send(addr, data, a1);
 }
@@ -594,7 +594,7 @@ void YM2612::SetD1L(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x80 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x00001111; //Mask RR
+  data &= 0b00001111; //Mask RR
   data |= value << 4; 
   send(addr, data, a1);
 }
@@ -616,7 +616,7 @@ void YM2612::SetRR(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x80 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11110000; //Mask D1L
+  data &= 0b11110000; //Mask D1L
   data |= value; 
   send(addr, data, a1);
 }
@@ -630,7 +630,7 @@ void YM2612::SetDetune(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x30 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x00001111; //Mask MUL
+  data &= 0b00001111; //Mask MUL
   data |= value << 4; 
   send(addr, data, a1);
 }
@@ -644,7 +644,7 @@ void YM2612::SetMult(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x30 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x01110000; //Mask DT1
+  data &= 0b01110000; //Mask DT1
   data |= value; 
   send(addr, data, a1);
 }
@@ -658,7 +658,7 @@ void YM2612::SetRateScaling(uint8_t slot, uint8_t op, uint8_t value)
   uint8_t addr = (0x50 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x00011111; //Mask AR
+  data &= 0b00011111; //Mask AR
   data |= value << 6; 
   send(addr, data, a1);
 }
@@ -670,7 +670,7 @@ void YM2612::SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value)
   uint8_t addr = (0x60 + (0x04*op))+slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x01111111; //Mask AR
+  data &= 0b01111111; //Mask AR
   data |= value << 7;
   send(addr, data, a1);
 }
@@ -678,7 +678,7 @@ void YM2612::SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value)
 void YM2612::SetLFOEnabled(bool value)
 {
   uint8_t data = GetShadowValue(0x22, 0);
-  data &= 0x11110111; //Mask LFOFrq
+  data &= 0b11110111; //Mask LFOFrq
   data |= value << 3;
   send(0x22, data, false);
 }
@@ -686,7 +686,7 @@ void YM2612::SetLFOEnabled(bool value)
 void YM2612::SetLFOFreq(bool value)
 {
   uint8_t data = GetShadowValue(0x22, 0);
-  data &= 0x11111000; //Mask LFOEnable
+  data &= 0b11111000; //Mask LFOEnable
   data |= value;
   send(0x22, data, false);
 }
@@ -700,7 +700,7 @@ void YM2612::SetFreqModSens(uint8_t slot, uint8_t value)
   uint8_t addr = 0xB4 + slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11111000; //Mask L_R_AMS
+  data &= 0b11111000; //Mask L_R_AMS
   data |= value;
   send(addr, data, a1);
 }
@@ -714,8 +714,9 @@ void YM2612::SetAMSens(uint8_t slot, uint8_t value)
   uint8_t addr = 0xB4 + slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11000111; //Mask L_R_FMS
+  data &= 0b11000111; //Mask L_R_FMS
   data |= value << 3;
+  data |= 0b11000000; //Set L_R to true for now
   send(addr, data, a1);
 }
 
@@ -728,7 +729,7 @@ void YM2612::SetAlgo(uint8_t slot, uint8_t value)
   uint8_t addr = 0xB0 + slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11111000; //Mask feedback
+  data &= 0b11111000; //Mask feedback
   data |= value;
   send(addr, data, a1);
 }
@@ -742,7 +743,7 @@ void YM2612::SetFMFeedback(uint8_t slot, uint8_t value)
   uint8_t addr = 0xB0 + slot;
   uint8_t data = GetShadowValue(addr, a1);
 
-  data &= 0x11000111; //Mask Algo
+  data &= 0b11000111; //Mask Algo
   data |= value << 3;
   send(addr, data, a1);
 }
