@@ -74,6 +74,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define YM_VELOCITY_CHANNEL 3
 #define PSG_VELOCITY_CHANNEL 4
 #define PSG_NOISE_CHANNEL 5
+int8_t activeChannel = 1;
 NPRM nprm;
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
@@ -679,7 +680,7 @@ void PitchChange(byte channel, int pitch)
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
-  if(phonicMode == MONO)
+  if(operationMode == STANDALONE)
   {
     if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
     {
@@ -695,15 +696,18 @@ void KeyOn(byte channel, byte key, byte velocity)
       sn76489.SetNoiseOn(key, velocity, 1);
     }
   }
-  else
+  else if(operationMode == VST)
   {
-    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel);
+      if(activeChannel == 7)
+        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false);
+      else
+        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel-1);
   }
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  if(phonicMode == MONO)
+  if(operationMode == STANDALONE)
   {
     if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
     {
@@ -718,9 +722,12 @@ void KeyOff(byte channel, byte key, byte velocity)
       sn76489.SetNoiseOff(key);
     }
   }
-  else
+  else if(operationMode == VST)
   {
-    ym2612.SetChannelOff(channel);
+      if(activeChannel == 7)
+        ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
+      else
+        ym2612.SetChannelOff(channel-1);
   }
 }
 
@@ -747,16 +754,6 @@ void ControlChange(byte channel, byte control, byte value)
       PSGsustainEnabled = (value >= 64);
       PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
-  }
-  else if(control == 0x7E)
-  {
-    phonicMode = MONO;
-    Serial.println("SET MODE TO MONO");
-  }
-  else if(control == 0x7F)
-  {
-    phonicMode = POLY;
-    Serial.println("SET MODE TO POLY");
   }
   else
   {
@@ -800,25 +797,22 @@ void SystemExclusive(byte *data, uint16_t length)
     for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
     for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
     for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
+    ProgramChange(activeChannel, 0);
   }
-  ProgramChange(1, 0);
 }
 
 uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
-  {
-    if(program == 255)
-      program = maxValidVoices-1;
-    program %= maxValidVoices;
-    currentProgram = program;
-    LCDRedraw(lcdSelectionIndex);
-    ym2612.SetVoice(voices[currentProgram]);
-    Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
-    DumpVoiceData(voices[currentProgram]);
-    lastProgram = program;
-  }
+  if(program == 255)
+    program = maxValidVoices-1;
+  program %= maxValidVoices;
+  currentProgram = program;
+  LCDRedraw(lcdSelectionIndex);
+  ym2612.SetVoice(voices[currentProgram]);
+  Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
+  DumpVoiceData(voices[currentProgram]);
+  lastProgram = program;
 }
 
 void HandleSerialIn()
@@ -1086,10 +1080,13 @@ void ProgramNewFavorite()
 void HandleNPRM(uint8_t channel)
 {
   uint8_t op = ((nprm.parameter/10)%10)-1;
-  for(int i = 0; i < (phonicMode == MONO ? MAX_CHANNELS_YM : 1); i++)
+  if(activeChannel != 7)
+      channel--;
+  for(int i = 0; i < (activeChannel == 7 ? MAX_CHANNELS_YM : 1); i++)
   {
-    if(phonicMode == MONO)
+    if(activeChannel == 7)
       channel = i;
+    
     switch(nprm.parameter)
       {
         case 10:
@@ -1173,8 +1170,31 @@ void HandleNPRM(uint8_t channel)
         case 57:
           ym2612.Reset();
           break;
+        case 63:
+          activeChannel = nprm.value;
+          if(activeChannel == 0)
+            activeChannel = 7;
+        break;
+        case 64:
+          if(!nprm.value)
+          {
+            operationMode = VST;
+            memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+            fileName[0] = 'V';
+            fileName[1] = 'S';
+            fileName[2] = 'T';
+            fileName[3] = '\0';
+            redrawLCDOnNextLoop = true;
+          } 
+          else
+          {
+            operationMode = STANDALONE;
+            stopLCDFileUpdate = false;
+            LoadFile(FIRST_FILE);
+          }
+        break;
         default:
-        Serial.println("NPRM DEFAULT");
+          Serial.println("NPRM DEFAULT");
         break;
       }
     }
