@@ -790,7 +790,18 @@ void ControlChange(byte channel, byte control, byte value)
 
 void SystemExclusive(byte *data, uint16_t length)
 {
-  Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
+  //Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
+  if(data[0] == 0xF0 && data[1] == MIDI_MFG_ID && data[2] == MIDI_DEVICE_ID) //Patch data recieved (OPM Format)
+  {
+    int i = 3;
+    for(; i<8; i++) { voices[0].LFO[i-3] = data[i]; }
+    for(; i<15; i++) { voices[0].CH[i-8] = data[i]; }
+    for(; i<26; i++) { voices[0].M1[i-15] = data[i]; }
+    for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
+    for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
+    for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
+  }
+  ProgramChange(1, 0);
 }
 
 uint8_t lastProgram = 0;
@@ -1159,7 +1170,6 @@ void HandleNPRM(uint8_t channel)
         case 55:
           ym2612.SetFMFeedback(channel, nprm.value);
           break;
-
         case 57:
           ym2612.Reset();
           break;
@@ -1169,11 +1179,9 @@ void HandleNPRM(uint8_t channel)
       }
     }
   }
-  
 
 void loop() 
 {
-  //usbMIDI.read();
   while (usbMIDI.read()) {};
   MIDI.read();
   HandleRotaryEncoder();
