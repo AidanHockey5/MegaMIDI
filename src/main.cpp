@@ -74,6 +74,15 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define YM_VELOCITY_CHANNEL 3
 #define PSG_VELOCITY_CHANNEL 4
 #define PSG_NOISE_CHANNEL 5
+
+#define YM_VST_ALL 10
+#define YM_VST_1 11
+#define YM_VST_2 12
+#define YM_VST_3 13
+#define YM_VST_4 14
+#define YM_VST_5 15
+#define YM_VST_6 16
+
 int8_t activeChannel = 1;
 NPRM nprm;
 
@@ -660,7 +669,7 @@ void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM fi
 
 void PitchChange(byte channel, int pitch)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
   {
     pitchBendYM = pitch;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)
@@ -668,6 +677,11 @@ void PitchChange(byte channel, int pitch)
       ym2612.AdjustPitch(i, pitch);
     }
   }
+  // else if(channel > YM_VST_ALL && channel <= YM_VST_6)
+  // {
+  //   pitchBendYM = pitch;
+  //   ym2612.AdjustPitch(channel-11, pitch);
+  // }
   else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
     for(int i = 0; i<MAX_CHANNELS_PSG; i++)
@@ -680,54 +694,42 @@ void PitchChange(byte channel, int pitch)
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
-  if(operationMode == STANDALONE)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
   {
-    if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
-    {
-      if(isFileValid || currentFavorite != 0xFF)
-        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
-    }
-    else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
-    {
-      sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
-    }
-    else if(channel == PSG_NOISE_CHANNEL)
-    {
-      sn76489.SetNoiseOn(key, velocity, 1);
-    }
+    if(isFileValid || currentFavorite != 0xFF)
+      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
   }
-  else if(operationMode == VST)
+  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
-      if(activeChannel == 7)
-        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false);
-      else
-        ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel-1);
+    sn76489.SetChannelOn(key+SEMITONE_ADJ_PSG, velocity, channel == PSG_VELOCITY_CHANNEL);
   }
+  else if(channel == PSG_NOISE_CHANNEL)
+  {
+    sn76489.SetNoiseOn(key, velocity, 1);
+  }
+  else
+  {
+    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel-10);
+  }     
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  if(operationMode == STANDALONE)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
   {
-    if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
-    {
-      ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
-    }
-    else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
-    {
-      sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
-    }
-    else if(channel == PSG_NOISE_CHANNEL)
-    {
-      sn76489.SetNoiseOff(key);
-    }
+    ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
   }
-  else if(operationMode == VST)
+  else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
-      if(activeChannel == 7)
-        ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
-      else
-        ym2612.SetChannelOff(channel-1);
+    sn76489.SetChannelOff(key+SEMITONE_ADJ_PSG);
+  }
+  else if(channel == PSG_NOISE_CHANNEL)
+  {
+    sn76489.SetNoiseOff(key);
+  }
+  else
+  {
+    ym2612.SetChannelOff(channel-10);
   }
 }
 
@@ -774,9 +776,6 @@ void ControlChange(byte channel, byte control, byte value)
       //Handle NPRM
       //Serial.print("NPRM --- "); Serial.print("PARAM: "); Serial.print(nprm.parameter); Serial.print("   "); Serial.print("VALUE: "); Serial.println(nprm.value);
 
-      if(channel != 0)
-        channel--;
-
       HandleNPRM(channel);
       break;
       default:
@@ -797,7 +796,7 @@ void SystemExclusive(byte *data, uint16_t length)
     for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
     for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
     for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
-    ProgramChange(activeChannel, 0);
+    ym2612.SetVoice(voices[0]);
   }
 }
 
@@ -1080,12 +1079,13 @@ void ProgramNewFavorite()
 void HandleNPRM(uint8_t channel)
 {
   uint8_t op = ((nprm.parameter/10)%10)-1;
-  if(activeChannel != 7)
-      channel--;
-  for(int i = 0; i < (activeChannel == 7 ? MAX_CHANNELS_YM : 1); i++)
+  uint8_t slot = channel;
+  if(channel >= YM_VST_1)
+      slot-=11;
+  for(int i = 0; i < (channel == YM_VST_ALL ? MAX_CHANNELS_YM : 1); i++)
   {
-    if(activeChannel == 7)
-      channel = i;
+    if(channel == YM_VST_ALL)
+      slot = i;
     
     switch(nprm.parameter)
       {
@@ -1093,61 +1093,61 @@ void HandleNPRM(uint8_t channel)
         case 20:
         case 30:
         case 40:
-          ym2612.SetDetune(channel, op, nprm.value);
+          ym2612.SetDetune(slot, op, nprm.value);
           break;
         case 11:
         case 21:
         case 31:
         case 41:
-          ym2612.SetMult(channel, op, nprm.value);
+          ym2612.SetMult(slot, op, nprm.value);
           break;
         case 12:
         case 22:
         case 32:
         case 42:
-          ym2612.SetTL(channel, op, nprm.value);
+          ym2612.SetTL(slot, op, nprm.value);
           break;
         case 13:
         case 23:
         case 33:
         case 43:
-          ym2612.SetAR(channel, op, nprm.value);
+          ym2612.SetAR(slot, op, nprm.value);
           break;
         case 14:
         case 24:
         case 34:
         case 44:
-          ym2612.SetD1R(channel, op, nprm.value);
+          ym2612.SetD1R(slot, op, nprm.value);
           break;
         case 15:
         case 25:
         case 35:
         case 45:
-          ym2612.SetD2R(channel, op, nprm.value);
+          ym2612.SetD2R(slot, op, nprm.value);
           break;
         case 16:
         case 26:
         case 36:
         case 46:
-          ym2612.SetD1L(channel, op, nprm.value);
+          ym2612.SetD1L(slot, op, nprm.value);
           break;
         case 17:
         case 27:
         case 37:
         case 47:
-          ym2612.SetRR(channel, op, nprm.value);
+          ym2612.SetRR(slot, op, nprm.value);
           break;
         case 18:
         case 28:
         case 38:
         case 48:
-          ym2612.SetRateScaling(channel, op, nprm.value);
+          ym2612.SetRateScaling(slot, op, nprm.value);
           break;  
         case 19:
         case 29:
         case 39:
         case 49:
-          ym2612.SetAmplitudeModulation(channel, op, nprm.value > 63);
+          ym2612.SetAmplitudeModulation(slot, op, nprm.value > 63);
           break;  
         case 50:
           ym2612.SetLFOEnabled(nprm.value > 63);
@@ -1156,16 +1156,16 @@ void HandleNPRM(uint8_t channel)
           ym2612.SetLFOFreq(nprm.value);
           break;
         case 52:
-          ym2612.SetFreqModSens(channel, nprm.value);
+          ym2612.SetFreqModSens(slot, nprm.value);
           break;
         case 53:
-          ym2612.SetAMSens(channel, nprm.value);
+          ym2612.SetAMSens(slot, nprm.value);
           break;
         case 54:
-          ym2612.SetAlgo(channel, nprm.value);
+          ym2612.SetAlgo(slot, nprm.value);
           break;
         case 55:
-          ym2612.SetFMFeedback(channel, nprm.value);
+          ym2612.SetFMFeedback(slot, nprm.value);
           break;
         case 57:
           ym2612.Reset();
