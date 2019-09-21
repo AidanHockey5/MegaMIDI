@@ -19,6 +19,7 @@ private:
     typedef struct
     {
         bool keyOn = false;
+        uint16_t keyCount = 0;
         bool sustained = false;
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
@@ -65,6 +66,7 @@ public:
     void SetMult(uint8_t slot, uint8_t op, uint8_t value);
     void SetRateScaling(uint8_t slot, uint8_t op, uint8_t value);
     void SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value);
+    void SetVoiceManual(uint8_t slot, Voice v);
     
     //Globals
     void SetLFOEnabled(bool value);

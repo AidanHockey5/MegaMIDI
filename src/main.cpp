@@ -83,7 +83,6 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define YM_VST_5 15
 #define YM_VST_6 16
 
-int8_t activeChannel = 1;
 NPRM nprm;
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
@@ -787,7 +786,7 @@ void ControlChange(byte channel, byte control, byte value)
 void SystemExclusive(byte *data, uint16_t length)
 {
   //Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
-  if(data[0] == 0xF0 && data[1] == MIDI_MFG_ID && data[2] == MIDI_DEVICE_ID) //Patch data recieved (OPM Format)
+  if(data[0] == 0xF0 && data[1] == MIDI_MFG_ID) //Patch data recieved (OPM Format), use device ID to mark slot to set. 0 = all, 1 = slot 1, 2 = slot 2, etc.
   {
     int i = 3;
     for(; i<8; i++) { voices[0].LFO[i-3] = data[i]; }
@@ -796,7 +795,10 @@ void SystemExclusive(byte *data, uint16_t length)
     for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
     for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
     for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
-    ym2612.SetVoice(voices[0]);
+    if(data[2] == 0)
+      ym2612.SetVoice(voices[0]);
+    else 
+      ym2612.SetVoiceManual(data[2]-1, voices[0]);
   }
 }
 
@@ -1170,28 +1172,6 @@ void HandleNPRM(uint8_t channel)
         case 57:
           ym2612.Reset();
           break;
-        case 63:
-          activeChannel = nprm.value;
-          if(activeChannel == 0)
-            activeChannel = 7;
-        break;
-        case 64:
-          if(!nprm.value)
-          {
-            operationMode = VST;
-            memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
-            fileName[0] = 'V';
-            fileName[1] = 'S';
-            fileName[2] = 'T';
-            fileName[3] = '\0';
-            redrawLCDOnNextLoop = true;
-          } 
-          else
-          {
-            operationMode = STANDALONE;
-            stopLCDFileUpdate = false;
-            LoadFile(FIRST_FILE);
-          }
         break;
         default:
           Serial.println("NPRM DEFAULT");

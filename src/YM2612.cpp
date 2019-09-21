@@ -166,6 +166,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled, u
                 }
                 channels[i].keyOn = true;
                 channels[i].keyNumber = key;
+                channels[i].keyCount += key;
                 channels[i].blockNumber = key/12;
                 channels[i].sustained = YMsustainEnabled;
                 channels[i].index = chIndex;
@@ -186,6 +187,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled, u
           send(0x28, 0x00 + offset + (setA1 << 2));
           channels[highestIndex].keyOn = true;
           channels[highestIndex].keyNumber = key;
+          channels[highestIndex].keyCount += key;
           channels[highestIndex].blockNumber = key/12;
           channels[highestIndex].sustained = YMsustainEnabled;
           channels[highestIndex].index = chIndex;
@@ -199,6 +201,7 @@ void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled, u
       openChannel = channel;
       channels[channel].keyOn = true;
       channels[channel].keyNumber = channel;
+      channels[channel].keyCount += channel;
       channels[channel].blockNumber = key/12;
       channels[channel].sustained = YMsustainEnabled;
       channels[channel].index = chIndex;
@@ -286,9 +289,13 @@ void YM2612::SetChannelOff(uint8_t key)
         {
             if(channels[i].sustained)
               continue;
-            channels[i].keyOn = false;
-            closedChannel = i;
-            break;
+            channels[i].keyCount -= key;
+            if(channels[i].keyCount == 0)
+            {
+              channels[i].keyOn = false;
+              closedChannel = i;
+              break;
+            }
         }
     }
     if(closedChannel == 0xFF)
@@ -319,6 +326,58 @@ void YM2612::ClampSustainedKeys()
       channels[i].sustained = true;
     }
   }
+}
+
+void YM2612::SetVoiceManual(uint8_t slot, Voice v)
+{
+    SetFMFeedback(slot, v.CH[1]);
+    SetAlgo(slot, v.CH[2]);
+    SetAMSens(slot, v.CH[3]);
+    SetFreqModSens(slot, v.CH[4]);
+
+    SetAR(slot, 0, v.M1[0]);
+    SetD1R(slot, 0, v.M1[1]);
+    SetD2R(slot, 0, v.M1[2]);
+    SetRR(slot, 0, v.M1[3]);
+    SetD1L(slot, 0, v.M1[4]);
+    SetTL(slot, 0, v.M1[5]);
+    SetRateScaling(slot, 0, v.M1[6]);
+    SetMult(slot, 0, v.M1[7]);
+    SetDetune(slot, 0, v.M1[8]);
+    SetAmplitudeModulation(slot, 0, v.M1[10]);
+
+    SetAR(slot, 1, v.C1[0]);
+    SetD1R(slot, 1, v.C1[1]);
+    SetD2R(slot, 1, v.C1[2]);
+    SetRR(slot, 1, v.C1[3]);
+    SetD1L(slot, 1, v.C1[4]);
+    SetTL(slot, 1, v.C1[5]);
+    SetRateScaling(slot, 1, v.C1[6]);
+    SetMult(slot, 1, v.C1[7]);
+    SetDetune(slot, 1, v.C1[8]);
+    SetAmplitudeModulation(slot, 1, v.C1[10]);
+
+    SetAR(slot, 2, v.M2[0]);
+    SetD1R(slot, 2, v.M2[1]);
+    SetD2R(slot, 2, v.M2[2]);
+    SetRR(slot, 2, v.M2[3]);
+    SetD1L(slot, 2, v.M2[4]);
+    SetTL(slot, 2, v.M2[5]);
+    SetRateScaling(slot, 2, v.M2[6]);
+    SetMult(slot, 2, v.M2[7]);
+    SetDetune(slot, 2, v.M2[8]);
+    SetAmplitudeModulation(slot, 2, v.M2[10]);
+
+    SetAR(slot, 3, v.C2[0]);
+    SetD1R(slot, 3, v.C2[1]);
+    SetD2R(slot, 3, v.C2[2]);
+    SetRR(slot, 3, v.C2[3]);
+    SetD1L(slot, 3, v.C2[4]);
+    SetTL(slot, 3, v.C2[5]);
+    SetRateScaling(slot, 3, v.C2[6]);
+    SetMult(slot, 3, v.C2[7]);
+    SetDetune(slot, 3, v.C2[8]);
+    SetAmplitudeModulation(slot, 3, v.C2[10]);
 }
 
 void YM2612::SetVoice(Voice v)
