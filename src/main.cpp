@@ -695,7 +695,7 @@ void PitchChange(byte channel, int pitch)
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     if(isFileValid || currentFavorite != 0xFF)
       ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
@@ -708,15 +708,11 @@ void KeyOn(byte channel, byte key, byte velocity)
   {
     sn76489.SetNoiseOn(key, velocity, 1);
   }
-  else
-  {
-    ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, false, channel-10);
-  }     
 }
 
 void KeyOff(byte channel, byte key, byte velocity)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     ym2612.SetChannelOff(key+SEMITONE_ADJ_YM);
   }
@@ -727,10 +723,6 @@ void KeyOff(byte channel, byte key, byte velocity)
   else if(channel == PSG_NOISE_CHANNEL)
   {
     sn76489.SetNoiseOff(key);
-  }
-  else
-  {
-    ym2612.SetChannelOff(channel-10);
   }
 }
 

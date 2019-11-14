@@ -147,64 +147,46 @@ float YM2612::NoteToFrequency(uint8_t note)
 }
 
 uint8_t chIndex = 0;
-void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled, uint8_t channel)
+void YM2612::SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled)
 {
     uint8_t openChannel = 0xFF;
+    for(int i = 0; i<MAX_CHANNELS_YM; i++)
+    {
+        if(!channels[i].keyOn || channels[i].keyNumber == key)
+        {
+            if(channels[i].keyNumber == key && channels[i].sustained)
+            {
+              //Turn off the sustained channel before turning it back on again
+              uint8_t offset = i % 3;
+              bool setA1 = i > 2;
+              send(0x28, 0x00 + offset + (setA1 << 2));
+            }
+            channels[i].keyOn = true;
+            channels[i].keyNumber = key;
+            channels[i].blockNumber = key/12;
+            channels[i].sustained = YMsustainEnabled;
+            channels[i].index = chIndex;
+            openChannel = i;
+            break;
+        }
+    }
     uint8_t highestIndex = 0xFF;
-    if(channel == 0xFF)
+    if(openChannel == 0xFF) //All channels full, kill the oldest note
     {
       for(int i = 0; i<MAX_CHANNELS_YM; i++)
       {
-            if(!channels[i].keyOn || channels[i].keyNumber == key)
-            {
-                if(channels[i].keyNumber == key && channels[i].sustained)
-                {
-                  //Turn off the sustained channel before turning it back on again
-                  uint8_t offset = i % 3;
-                  bool setA1 = i > 2;
-                  send(0x28, 0x00 + offset + (setA1 << 2));
-                }
-                channels[i].keyOn = true;
-                channels[i].keyNumber = key;
-                channels[i].keyCount += key;
-                channels[i].blockNumber = key/12;
-                channels[i].sustained = YMsustainEnabled;
-                channels[i].index = chIndex;
-                openChannel = i;
-                break;
-            }
-        }
-
-        if(openChannel == 0xFF) //All channels full, kill the oldest note
-        {
-          for(int i = 0; i<MAX_CHANNELS_YM; i++)
-          {
-            if(channels[i].index < highestIndex)
-              highestIndex = channels[i].index;
-          }
-          uint8_t offset = highestIndex % 3;
-          bool setA1 = highestIndex > 2;
-          send(0x28, 0x00 + offset + (setA1 << 2));
-          channels[highestIndex].keyOn = true;
-          channels[highestIndex].keyNumber = key;
-          channels[highestIndex].keyCount += key;
-          channels[highestIndex].blockNumber = key/12;
-          channels[highestIndex].sustained = YMsustainEnabled;
-          channels[highestIndex].index = chIndex;
-          openChannel = highestIndex;
-        }
-    }
-    else
-    {
-      if(channel >= MAX_CHANNELS_YM)
-        channel = MAX_CHANNELS_YM-1;
-      openChannel = channel;
-      channels[channel].keyOn = true;
-      channels[channel].keyNumber = channel;
-      channels[channel].keyCount += channel;
-      channels[channel].blockNumber = key/12;
-      channels[channel].sustained = YMsustainEnabled;
-      channels[channel].index = chIndex;
+        if(channels[i].index < highestIndex)
+          highestIndex = channels[i].index;
+      }
+      uint8_t offset = highestIndex % 3;
+      bool setA1 = highestIndex > 2;
+      send(0x28, 0x00 + offset + (setA1 << 2));
+      channels[highestIndex].keyOn = true;
+      channels[highestIndex].keyNumber = key;
+      channels[highestIndex].blockNumber = key/12;
+      channels[highestIndex].sustained = YMsustainEnabled;
+      channels[highestIndex].index = chIndex;
+      openChannel = highestIndex;
     }
     chIndex++;
     chIndex %= MAX_CHANNELS_YM;
@@ -289,13 +271,9 @@ void YM2612::SetChannelOff(uint8_t key)
         {
             if(channels[i].sustained)
               continue;
-            channels[i].keyCount -= key;
-            if(channels[i].keyCount == 0)
-            {
-              channels[i].keyOn = false;
-              closedChannel = i;
-              break;
-            }
+            channels[i].keyOn = false;
+            closedChannel = i;
+            break;
         }
     }
     if(closedChannel == 0xFF)

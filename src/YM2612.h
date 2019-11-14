@@ -37,7 +37,7 @@ public:
     bool lfoOn = false;
     int8_t GetOctaveShift();
     void SetOctaveShift(int8_t shift);
-    void SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled, uint8_t channel = 0xFF);
+    void SetChannelOn(uint8_t key, uint8_t velocity, bool velocityEnabled);
     void SetChannelOff(uint8_t key);
     void SetVoice(Voice v);
     float NoteToFrequency(uint8_t note);
