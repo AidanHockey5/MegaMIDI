@@ -82,6 +82,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define YM_VST_4 14
 #define YM_VST_5 15
 #define YM_VST_6 16
+uint8_t sendPatchToVST = 0xFF;
 
 NPRM nprm;
 
@@ -160,6 +161,7 @@ void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
 void HandleNPRM(uint8_t channel);
+void SendPatchSysex(uint8_t slot);
 Voice GetFavoriteFromEEPROM(uint16_t index);
 
 void setup() 
@@ -783,6 +785,28 @@ void ControlChange(byte channel, byte control, byte value)
   }
 }
 
+void SendPatchSysex(uint8_t slot)
+{
+  return; //This function seems to cause too many issues
+
+
+
+  
+  uint8_t data[60];
+  uint8_t j = 3;
+  data[0] = 0xF0;
+  data[1] = MIDI_MFG_ID;
+  data[2] = slot+0x10; //replace device ID with slot indicator. Add a "1" to indicate direction
+  for(uint8_t i=0; i<5; i++) { data[j] = voices[slot].LFO[i]; j++; }
+  for(uint8_t i=0; i<7; i++) { data[j] = voices[slot].CH[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].M1[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].C1[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].M2[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].C2[i]; j++; }
+  data[59] = 0xF7; //Ending byte
+  usbMIDI.sendSysEx(60, data, true);
+}
+
 void SystemExclusive(byte *data, uint16_t length)
 {
   //Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
@@ -795,10 +819,10 @@ void SystemExclusive(byte *data, uint16_t length)
     for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
     for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
     for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
-    if(data[2] == 0)
-      ym2612.SetVoice(voices[0]);
-    else 
-      ym2612.SetVoiceManual(data[2]-1, voices[0]);
+
+    ym2612.SetVoice(voices[0]);
+    currentProgram = 0;
+    LCDRedraw();
   }
 }
 
@@ -1080,98 +1104,123 @@ void ProgramNewFavorite()
 
 void HandleNPRM(uint8_t channel)
 {
-  uint8_t op = ((nprm.parameter/10)%10)-1;
-  uint8_t slot = channel;
-  if(channel >= YM_VST_1)
-      slot-=11;
-  for(int i = 0; i < (channel == YM_VST_ALL ? MAX_CHANNELS_YM : 1); i++)
+  if(currentProgram != 0)
   {
-    if(channel == YM_VST_ALL)
-      slot = i;
-    
+    currentProgram = 0;
+    LCDRedraw();
+  }
+  uint8_t op = ((nprm.parameter/10)%10)-1;
+  for(int i = 0; i < MAX_CHANNELS_YM; i++)
+  {
     switch(nprm.parameter)
       {
         case 10:
         case 20:
         case 30:
         case 40:
-          ym2612.SetDetune(slot, op, nprm.value);
+          ym2612.SetDetune(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[8] = nprm.value; break; case 1: voices[0].C1[8] = nprm.value;  break; case 2: voices[0].M2[8] = nprm.value;  break; case 3: voices[0].C2[8] = nprm.value;  break; }
           break;
         case 11:
         case 21:
         case 31:
         case 41:
-          ym2612.SetMult(slot, op, nprm.value);
+          ym2612.SetMult(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[7] = nprm.value; break; case 1: voices[0].C1[7] = nprm.value;  break; case 2: voices[0].M2[7] = nprm.value;  break; case 3: voices[0].C2[7] = nprm.value;  break; }
           break;
         case 12:
         case 22:
         case 32:
         case 42:
-          ym2612.SetTL(slot, op, nprm.value);
+          ym2612.SetTL(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[5] = nprm.value; break; case 1: voices[0].C1[5] = nprm.value;  break; case 2: voices[0].M2[5] = nprm.value;  break; case 3: voices[0].C2[5] = nprm.value;  break; }
           break;
         case 13:
         case 23:
         case 33:
         case 43:
-          ym2612.SetAR(slot, op, nprm.value);
+          ym2612.SetAR(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[0] = nprm.value; break; case 1: voices[0].C1[0] = nprm.value;  break; case 2: voices[0].M2[0] = nprm.value;  break; case 3: voices[0].C2[0] = nprm.value;  break; }
           break;
         case 14:
         case 24:
         case 34:
         case 44:
-          ym2612.SetD1R(slot, op, nprm.value);
+          ym2612.SetD1R(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[1] = nprm.value; break; case 1: voices[0].C1[1] = nprm.value;  break; case 2: voices[0].M2[1] = nprm.value;  break; case 3: voices[0].C2[1] = nprm.value;  break; }
           break;
         case 15:
         case 25:
         case 35:
         case 45:
-          ym2612.SetD2R(slot, op, nprm.value);
+          ym2612.SetD2R(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[2] = nprm.value; break; case 1: voices[0].C1[2] = nprm.value;  break; case 2: voices[0].M2[2] = nprm.value;  break; case 3: voices[0].C2[2] = nprm.value;  break; }
           break;
         case 16:
         case 26:
         case 36:
         case 46:
-          ym2612.SetD1L(slot, op, nprm.value);
+          ym2612.SetD1L(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[4] = nprm.value; break; case 1: voices[0].C1[4] = nprm.value;  break; case 2: voices[0].M2[4] = nprm.value;  break; case 3: voices[0].C2[4] = nprm.value;  break; }
           break;
         case 17:
         case 27:
         case 37:
         case 47:
-          ym2612.SetRR(slot, op, nprm.value);
+          ym2612.SetRR(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[3] = nprm.value; break; case 1: voices[0].C1[3] = nprm.value;  break; case 2: voices[0].M2[3] = nprm.value;  break; case 3: voices[0].C2[3] = nprm.value;  break; }
           break;
         case 18:
         case 28:
         case 38:
         case 48:
-          ym2612.SetRateScaling(slot, op, nprm.value);
+          ym2612.SetRateScaling(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[6] = nprm.value; break; case 1: voices[0].C1[6] = nprm.value;  break; case 2: voices[0].M2[6] = nprm.value;  break; case 3: voices[0].C2[6] = nprm.value;  break; }
           break;  
         case 19:
         case 29:
         case 39:
         case 49:
-          ym2612.SetAmplitudeModulation(slot, op, nprm.value > 63);
+        {
+          bool setAM = nprm.value > 63;
+          ym2612.SetAmplitudeModulation(i, op, setAM);
+          switch(op){ case 0: voices[0].M1[10] = setAM; break; case 1: voices[0].C1[10] = setAM;  break; case 2: voices[0].M2[10] = setAM;  break; case 3: voices[0].C2[10] = setAM;  break; }
           break;  
+        }
         case 50:
-          ym2612.SetLFOEnabled(nprm.value > 63);
+        {
+          bool lfoEn = nprm.value > 63;
+          for(uint8_t i = 0; i < MAX_CHANNELS_YM; i++)
+            voices[i].LFO[4] = lfoEn;
+          ym2612.SetLFOEnabled(lfoEn);
           break;
+        }
         case 51:
+          for(uint8_t i = 0; i < MAX_CHANNELS_YM; i++)
+            voices[i].LFO[0] = nprm.value;
           ym2612.SetLFOFreq(nprm.value);
           break;
         case 52:
-          ym2612.SetFreqModSens(slot, nprm.value);
+          ym2612.SetFreqModSens(i, nprm.value);
+          voices[0].CH[4] = nprm.value;
           break;
         case 53:
-          ym2612.SetAMSens(slot, nprm.value);
+          ym2612.SetAMSens(i, nprm.value);
+          voices[0].CH[3] = nprm.value;
           break;
         case 54:
-          ym2612.SetAlgo(slot, nprm.value);
+          ym2612.SetAlgo(i, nprm.value);
+          voices[0].CH[2] = nprm.value;
           break;
         case 55:
-          ym2612.SetFMFeedback(slot, nprm.value);
+          ym2612.SetFMFeedback(i, nprm.value);
+          voices[0].CH[1] = nprm.value;
           break;
         case 57:
           ym2612.Reset();
           break;
+        case 63:
+          sendPatchToVST = nprm.value;
         break;
         default:
           Serial.println("NPRM DEFAULT");
@@ -1197,5 +1246,10 @@ void loop()
   byte portARead = ~PINA;
   if(portARead)
     HandleFavoriteButtons(portARead);
+  if(sendPatchToVST != 0xFF)
+  {
+    SendPatchSysex(sendPatchToVST);
+    sendPatchToVST = 0xFF;
+  }
 }
  
