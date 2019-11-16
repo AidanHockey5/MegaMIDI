@@ -162,6 +162,7 @@ void ProgramNewFavorite();
 void SDReadFailure();
 void HandleNPRM(uint8_t channel);
 void SendPatchSysex(uint8_t slot);
+void VSTMode();
 Voice GetFavoriteFromEEPROM(uint16_t index);
 
 void setup() 
@@ -692,13 +693,23 @@ void PitchChange(byte channel, int pitch)
   }
 }
 
+bool ymVelocityEnabledFlag = false;
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
   if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     if(isFileValid || currentFavorite != 0xFF)
-      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
+    {
+      if(channel == YM_VELOCITY_CHANNEL)
+        ymVelocityEnabledFlag = true;
+      else if(ymVelocityEnabledFlag)
+      {
+        ymVelocityEnabledFlag = false;
+        ym2612.SetVoice(voices[currentProgram]);
+      }
+      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, ymVelocityEnabledFlag);
+    }
   }
   else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
@@ -802,6 +813,7 @@ void SendPatchSysex(uint8_t slot)
 void SystemExclusive(byte *data, uint16_t length)
 {
   //Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
+  VSTMode();
   if(data[0] == 0xF0 && data[1] == MIDI_MFG_ID) //Patch data recieved (OPM Format), use device ID to mark slot to set. 0 = all, 1 = slot 1, 2 = slot 2, etc.
   {
     int i = 3;
@@ -1094,13 +1106,26 @@ void ProgramNewFavorite()
   digitalWriteFast(leds[currentFavorite], HIGH);
 }
 
-void HandleNPRM(uint8_t channel)
+void VSTMode()
 {
   if(currentProgram != 0)
   {
     currentProgram = 0;
-    LCDRedraw();
+    redrawLCDOnNextLoop = true;
   }
+  if(strcmp(fileName, "VST") != 0)
+  {
+    memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+    strcpy(fileName, "VST");
+    maxValidVoices = 1;
+    Serial.println(fileName);
+    redrawLCDOnNextLoop = true;
+  }
+}
+
+void HandleNPRM(uint8_t channel)
+{
+  VSTMode();
   uint8_t op = ((nprm.parameter/10)%10)-1;
   for(int i = 0; i < MAX_CHANNELS_YM; i++)
   {
@@ -1210,9 +1235,27 @@ void HandleNPRM(uint8_t channel)
           break;
         case 57:
           ym2612.Reset();
+          Serial.println("RESET YM2612");
           break;
         case 63:
           sendPatchToVST = nprm.value;
+        break;
+        case 71:
+        case 72:
+        case 73:
+        case 74:
+        case 75:
+        case 76:
+        case 77:
+        {
+          uint8_t vstFav = nprm.parameter % 70;
+          if(vstFav != currentFavorite)
+          {
+            currentFavorite = vstFav;
+            UpdateLEDs();
+            ProgramNewFavorite();
+          }
+        }
         break;
         default:
           Serial.println("NPRM DEFAULT");
