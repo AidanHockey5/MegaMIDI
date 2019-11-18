@@ -21,8 +21,11 @@ def GetOS():
 
 OPERATING_SYSTEM = GetOS()
 SCRIPT_LOCATION = sys.path[0]
-AVRDUDE_LOCATION = SCRIPT_LOCATION+"\\FLASH_FIRMWARE"
-
+AVRDUDE_LOCATION = ""
+if(OPERATING_SYSTEM == "WIN"):
+    AVRDUDE_LOCATION = SCRIPT_LOCATION+"\\FLASH_FIRMWARE"
+elif(OPERATING_SYSTEM == "LIN"):
+    AVRDUDE_LOCATION = SCRIPT_LOCATION+"/FLASH_FIRMWARE"
 def serial_ports():
     """ Lists serial port names
 
@@ -96,6 +99,6 @@ if(r.ok):
 
     if(OPERATING_SYSTEM == "WIN"):
         os.system(AVRDUDE_LOCATION+"\\avrdude.exe -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 1000000 -U flash:w:\"" + AVRDUDE_LOCATION + "\\firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m") 
-    #elif(OPERATING_SYSTEM == "LIN"):
-
+    elif(OPERATING_SYSTEM == "LIN"):
+        os.system(AVRDUDE_LOCATION+"/avrdude -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 1000000 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m") 
     #elif(OPERATING_SYSTEM == "OSX"):
