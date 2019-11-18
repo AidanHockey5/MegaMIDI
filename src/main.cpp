@@ -1235,7 +1235,6 @@ void HandleNPRM(uint8_t channel)
           break;
         case 57:
           ym2612.Reset();
-          Serial.println("RESET YM2612");
           break;
         case 63:
           sendPatchToVST = nprm.value;
