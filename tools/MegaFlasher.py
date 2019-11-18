@@ -93,7 +93,10 @@ if(r.ok):
     repoItems = json.loads(r.text or r.content)
     latest = repoItems[0]["assets"][0]["browser_download_url"]
     print(latest)
-    urllib.request.urlretrieve (latest, AVRDUDE_LOCATION+"\\firmware.hex")
+    if(OPERATING_SYSTEM == "WIN"):
+        urllib.request.urlretrieve (latest, AVRDUDE_LOCATION+"\\firmware.hex")
+    elif(OPERATING_SYSTEM == "LIN"):
+        urllib.request.urlretrieve (latest, AVRDUDE_LOCATION+"/firmware.hex")
     print("OK")
     print("Invoking AVRDude at 1000000 baud, please wait...")
 
