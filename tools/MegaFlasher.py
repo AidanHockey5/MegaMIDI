@@ -3,6 +3,12 @@
 #                                      /Applications/Python\ 3.6/Install\ Certificates.command
 #Replace '3.6' with what ever version of python your running
 
+#Linux Note!
+#Linux python3 requires pyserial module. Run the following command in terminal to install it
+#                sudo apt-get install python-serial python3-serial
+#This script must be ran as sudo in order to gain access to the serial ports!
+#                sudo python3 MegaFlasher.py
+
 
 import sys
 import glob
@@ -107,6 +113,6 @@ if(r.ok):
     if(OPERATING_SYSTEM == "WIN"):
         os.system(AVRDUDE_LOCATION+"\\avrdude.exe -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 115200 -U flash:w:\"" + AVRDUDE_LOCATION + "\\firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
     elif(OPERATING_SYSTEM == "LIN"):
-        os.system(AVRDUDE_LOCATION+"/avrdude -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 115200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
+        os.system(AVRDUDE_LOCATION+"/avrdude" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b115200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
     elif(OPERATING_SYSTEM == "OSX"):
         os.system(AVRDUDE_LOCATION+"/avrdude_osx" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b115200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
