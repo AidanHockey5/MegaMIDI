@@ -14,6 +14,7 @@
 #This script must be ran as sudo in order to gain access to the serial ports!
 #                'sudo python3 MegaFlasher.py'
 
+#Windows binary can be found here: https://www.aidanlawrence.com/tools/ee/MegaFlasher_Win_x64.zip
 
 import sys
 import glob
