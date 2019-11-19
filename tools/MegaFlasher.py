@@ -1,3 +1,8 @@
+#This script will automatically grab the latest firmware hex off of github and send it to your Arduino programmed with the ArduinoISP sketch
+#Your ArduinoISP sketch must be programmed for 19200 baud, which is the default value. Slow, but reliable! 
+
+#Make sure to place a 10uF or greater capacitor across the reset and ground pins on your Arduino!
+
 #MACOS Note! Requires SSL command to be ran!
 #run the following line in terminal
 #                                      /Applications/Python\ 3.6/Install\ Certificates.command
@@ -69,7 +74,6 @@ def serial_ports():
 print("---Megaflasher Python---")
 print("This script will detect your ArduinoISP serial port and invoke Avrdude for you.")
 print("Make sure your Arduino is programmed with the ArduinoISP example program from the Arduino IDE")
-print("and is set to 115200 baud (uncomment line 143 in the ArduinoISP program).")
 print("===================")
 print("")
 
@@ -108,11 +112,11 @@ if(r.ok):
     elif(OPERATING_SYSTEM == "LIN" or OPERATING_SYSTEM == "OSX"):
         urllib.request.urlretrieve (latest, AVRDUDE_LOCATION+"/firmware.hex")
     print("OK")
-    print("Invoking AVRDude at 115200 baud, please wait...")
+    print("Invoking AVRDude at 19200 baud, please wait...")
 
     if(OPERATING_SYSTEM == "WIN"):
-        os.system(AVRDUDE_LOCATION+"\\avrdude.exe -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 115200 -U flash:w:\"" + AVRDUDE_LOCATION + "\\firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
+        os.system(AVRDUDE_LOCATION+"\\avrdude.exe -c arduino -p usb1286 -P" + ports[selectedPort] + " -b 19200 -U flash:w:\"" + AVRDUDE_LOCATION + "\\firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
     elif(OPERATING_SYSTEM == "LIN"):
-        os.system(AVRDUDE_LOCATION+"/avrdude" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b115200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
+        os.system(AVRDUDE_LOCATION+"/avrdude" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b19200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
     elif(OPERATING_SYSTEM == "OSX"):
-        os.system(AVRDUDE_LOCATION+"/avrdude_osx" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b115200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
+        os.system(AVRDUDE_LOCATION+"/avrdude_osx" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b19200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
