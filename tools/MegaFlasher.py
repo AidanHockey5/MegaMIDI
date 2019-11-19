@@ -4,15 +4,15 @@
 #Make sure to place a 10uF or greater capacitor across the reset and ground pins on your Arduino!
 
 #MACOS Note! Requires SSL command to be ran!
-#run the following line in terminal
-#                                      /Applications/Python\ 3.6/Install\ Certificates.command
-#Replace '3.6' with what ever version of python your running
+#Run the following line in terminal
+#                '/Applications/Python\ 3.6/Install\ Certificates.command'
+#Replace '3.6' with what ever version of python your running. Once this command is ran successfully, you shouldn't encounter any more certificate errors
 
 #Linux Note!
 #Linux python3 requires pyserial module. Run the following command in terminal to install it
-#                sudo apt-get install python-serial python3-serial
+#                'sudo apt-get install python-serial python3-serial'
 #This script must be ran as sudo in order to gain access to the serial ports!
-#                sudo python3 MegaFlasher.py
+#                'sudo python3 MegaFlasher.py'
 
 
 import sys
@@ -71,7 +71,7 @@ def serial_ports():
             pass
     return result
 
-print("---Megaflasher Python---")
+print("---MegaFlasher Python---")
 print("This script will detect your ArduinoISP serial port and invoke Avrdude for you.")
 print("Make sure your Arduino is programmed with the ArduinoISP example program from the Arduino IDE")
 print("===================")
@@ -120,3 +120,7 @@ if(r.ok):
         os.system(AVRDUDE_LOCATION+"/avrdude" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b19200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
     elif(OPERATING_SYSTEM == "OSX"):
         os.system(AVRDUDE_LOCATION+"/avrdude_osx" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b19200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
+else:
+    print("Github API request failed. Please try again. If you are on OSX, open this script file in a text editor and read the comments at the top!")
+    input()
+    quit()
