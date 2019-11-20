@@ -4,8 +4,10 @@
 #Make sure to place a 10uF or greater capacitor across the reset and ground pins on your Arduino!
 
 #MACOS Note! Requires SSL command to be ran!
+#This script will ask the user if they would like the certificates first, then attempt to install them automatically
+#If you would prefer to manuallu install these certificates, look below:
 #Run the following line in terminal
-#                '/Applications/Python\ 3.6/Install\ Certificates.command'
+#                'open /Applications/Python\ 3.6/Install\ Certificates.command'
 #Replace '3.6' with what ever version of python your running. Once this command is ran successfully, you shouldn't encounter any more certificate errors
 
 #Linux Note!
@@ -15,16 +17,32 @@
 #                'sudo python3 MegaFlasher.py'
 
 #Windows binary can be found here: https://www.aidanlawrence.com/tools/ee/MegaFlasher_Win_x64.zip
+#MacOS Binary can be found here: https://www.aidanlawrence.com/tools/ee/MegaFlasherOSX.zip
 
 import sys
 import glob
 import serial
+import ssl
 import requests
 from multiprocessing import Queue
 import json
 import urllib
 import os
 from io import StringIO
+
+def SSLCheck():
+    pyVersion = str(sys.version_info.major) + "." + str(sys.version_info.minor)
+    if(os.path.exists(ssl.get_default_verify_paths().openssl_cafile) == False):
+        print("The required SSL certificates were not found. Would you like to install them?")
+        answer = input("Install required SSL certificates? Y/N:")
+        answer = answer.upper()
+        if(answer == "YES" or answer == "Y"):
+            os.system("open /Applications/Python\\ " + pyVersion + "/Install\\ Certificates.command")
+            print("Installed SSL certificates. Continuing...")
+        else:
+            print("Required SSL certificates were not installed. Exiting.")
+            sys.exit()
+    
 
 def GetOS():
     os = ""
@@ -73,6 +91,9 @@ def serial_ports():
             pass
     return result
 
+if(OPERATING_SYSTEM == "OSX"):
+    SSLCheck()
+
 print("---MegaFlasher Python---")
 print("This script will detect your ArduinoISP serial port and invoke Avrdude for you.")
 print("Make sure your Arduino is programmed with the ArduinoISP example program from the Arduino IDE")
@@ -89,7 +110,7 @@ while inputValid == False:
     if(len(ports) == 0):
         print("No serial devices found. Please connect your programmer and reload this program.")
         input()
-        quit()
+        sys.exit()
 
     i = 0
     for port in ports:
@@ -123,6 +144,6 @@ if(r.ok):
     elif(OPERATING_SYSTEM == "OSX"):
         os.system(AVRDUDE_LOCATION+"/avrdude_osx" + " -C" + AVRDUDE_LOCATION+"/avrdude.conf" + " -v -pusb1286 -carduino -P"   + ports[selectedPort] + " -b19200 -U flash:w:\"" + AVRDUDE_LOCATION + "/firmware.hex\"" + ":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m")
 else:
-    print("Github API request failed. Please try again. If you are on OSX, open this script file in a text editor and read the comments at the top!")
+    print("Github API request failed. Please try again.")
     input()
-    quit()
+    sys.exit()
