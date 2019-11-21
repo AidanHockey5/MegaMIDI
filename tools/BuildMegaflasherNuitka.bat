@@ -1,0 +1,1 @@
+python -m nuitka --standalone --follow-imports --recurse-all --include-plugin-files --mingw64 MegaFlasher.py

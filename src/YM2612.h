@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "Adjustments.h"
 #include "Voice.h"
+
 #define mask(s) (~(~0<<s))
 const int MAX_CHANNELS_YM = 6;
 
@@ -18,6 +19,7 @@ private:
     typedef struct
     {
         bool keyOn = false;
+        uint16_t keyCount = 0;
         bool sustained = false;
         uint8_t keyNumber = 0;
         uint8_t blockNumber = 0;
@@ -52,6 +54,28 @@ public:
     void send(unsigned char addr, unsigned char data, bool setA1=0);
     void DumpShadowRegisters();
     uint8_t GetShadowValue(uint8_t addr, bool bank);
+
+    //Manual register setting for MIDI exposure
+    void SetTL(uint8_t slot, uint8_t op, uint8_t value);
+    void SetAR(uint8_t slot, uint8_t op, uint8_t value);
+    void SetD1R(uint8_t slot, uint8_t op, uint8_t value);
+    void SetD1L(uint8_t slot, uint8_t op, uint8_t value);
+    void SetD2R(uint8_t slot, uint8_t op, uint8_t value);
+    void SetRR(uint8_t slot, uint8_t op, uint8_t value);
+    void SetDetune(uint8_t slot, uint8_t op, uint8_t value);
+    void SetMult(uint8_t slot, uint8_t op, uint8_t value);
+    void SetRateScaling(uint8_t slot, uint8_t op, uint8_t value);
+    void SetAmplitudeModulation(uint8_t slot, uint8_t op, bool value);
+    void SetVoiceManual(uint8_t slot, Voice v);
+    
+    //Globals
+    void SetLFOEnabled(bool value);
+    void SetLFOFreq(bool value);
+    void SetFreqModSens(uint8_t slot, uint8_t value);
+    void SetAlgo(uint8_t slot, uint8_t value);
+    void SetAMSens(uint8_t slot, uint8_t value);
+    void SetFMFeedback(uint8_t slot, uint8_t value);
+
 };
 #endif
 

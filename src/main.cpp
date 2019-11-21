@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.2.7"
+#define FW_VERSION "1.3"
 
 
 
@@ -63,6 +63,7 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 #include "LCDChars.h"
+#include "NPRM.h"
 
 //Music
 #include "Adjustments.h" //Look in this file for tuning & pitchbend settings
@@ -74,6 +75,16 @@ avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PRO
 #define PSG_VELOCITY_CHANNEL 4
 #define PSG_NOISE_CHANNEL 5
 
+#define YM_VST_ALL 10
+#define YM_VST_1 11
+#define YM_VST_2 12
+#define YM_VST_3 13
+#define YM_VST_4 14
+#define YM_VST_5 15
+#define YM_VST_6 16
+uint8_t sendPatchToVST = 0xFF;
+
+NPRM nprm;
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
@@ -128,6 +139,7 @@ void KeyOff(byte channel, byte key, byte velocity);
 void ProgramChange(byte channel, byte program);
 void PitchChange(byte channel, int pitch);
 void ControlChange(byte channel, byte control, byte value);
+void SystemExclusive(byte *data, uint16_t length);
 void HandleFavoriteButtons(byte portValue);
 bool LoadFile(byte strategy);
 void BlinkLED(byte led);
@@ -148,6 +160,9 @@ void IntroLEDs();
 void UpdateLEDs();
 void ProgramNewFavorite();
 void SDReadFailure();
+void HandleNPRM(uint8_t channel);
+void SendPatchSysex(uint8_t slot);
+void VSTMode();
 Voice GetFavoriteFromEEPROM(uint16_t index);
 
 void setup() 
@@ -193,6 +208,7 @@ void setup()
   usbMIDI.setHandleProgramChange(ProgramChange);
   usbMIDI.setHandlePitchChange(PitchChange);
   usbMIDI.setHandleControlChange(ControlChange);
+  usbMIDI.setHandleSystemExclusive(SystemExclusive);
 
   MIDI.setHandleNoteOn(KeyOn);
   MIDI.setHandleNoteOff(KeyOff);
@@ -655,7 +671,7 @@ void DumpVoiceData(Voice v) //Used to check operator settings from loaded OPM fi
 
 void PitchChange(byte channel, int pitch)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
+  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL || channel == YM_VST_ALL)
   {
     pitchBendYM = pitch;
     for(int i = 0; i<MAX_CHANNELS_YM; i++)
@@ -663,6 +679,11 @@ void PitchChange(byte channel, int pitch)
       ym2612.AdjustPitch(i, pitch);
     }
   }
+  // else if(channel > YM_VST_ALL && channel <= YM_VST_6)
+  // {
+  //   pitchBendYM = pitch;
+  //   ym2612.AdjustPitch(channel-11, pitch);
+  // }
   else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
     for(int i = 0; i<MAX_CHANNELS_PSG; i++)
@@ -672,13 +693,23 @@ void PitchChange(byte channel, int pitch)
   }
 }
 
+bool ymVelocityEnabledFlag = false;
 void KeyOn(byte channel, byte key, byte velocity)
 {
   stopLCDFileUpdate = true;
   if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
   {
     if(isFileValid || currentFavorite != 0xFF)
-      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, channel == YM_VELOCITY_CHANNEL);
+    {
+      if(channel == YM_VELOCITY_CHANNEL)
+        ymVelocityEnabledFlag = true;
+      else if(ymVelocityEnabledFlag)
+      {
+        ymVelocityEnabledFlag = false;
+        ym2612.SetVoice(voices[currentProgram]);
+      }
+      ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, ymVelocityEnabledFlag);
+    }
   }
   else if(channel == PSG_CHANNEL || channel == PSG_VELOCITY_CHANNEL)
   {
@@ -730,23 +761,87 @@ void ControlChange(byte channel, byte control, byte value)
       PSGsustainEnabled == true ? sn76489.ClampSustainedKeys() : sn76489.ReleaseSustainedKeys();
     }
   }
+  else
+  {
+    switch (control) //NRPN to control synth manually
+    {
+      case 99:
+      nprm.parameter = value << 7;
+      break;
+      case 98:
+      nprm.parameter += value;
+      break;
+      case 6:
+      nprm.value = value << 7;
+      break;
+      case 38:
+      nprm.value = nprm.value + value;
+
+      //Handle NPRM
+      //Serial.print("NPRM --- "); Serial.print("PARAM: "); Serial.print(nprm.parameter); Serial.print("   "); Serial.print("VALUE: "); Serial.println(nprm.value);
+
+      HandleNPRM(channel);
+      break;
+      default:
+      return;
+    }
+  }
+}
+
+void SendPatchSysex(uint8_t slot)
+{
+  return; //This function seems to cause too many issues
+
+
+
+  
+  uint8_t data[60];
+  uint8_t j = 3;
+  data[0] = 0xF0;
+  data[1] = MIDI_MFG_ID;
+  data[2] = slot+0x10; //replace device ID with slot indicator. Add a "1" to indicate direction
+  for(uint8_t i=0; i<5; i++) { data[j] = voices[slot].LFO[i]; j++; }
+  for(uint8_t i=0; i<7; i++) { data[j] = voices[slot].CH[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].M1[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].C1[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].M2[i]; j++; }
+  for(uint8_t i=0; i<11; i++) { data[j] = voices[slot].C2[i]; j++; }
+  data[59] = 0xF7; //Ending byte
+  usbMIDI.sendSysEx(60, data, true);
+}
+
+void SystemExclusive(byte *data, uint16_t length)
+{
+  //Serial.print("SYSEX: "); Serial.print(" DATA: "); Serial.print(data[0]); Serial.print(" LENGTH: "); Serial.println(length);
+  VSTMode();
+  if(data[0] == 0xF0 && data[1] == MIDI_MFG_ID) //Patch data recieved (OPM Format), use device ID to mark slot to set. 0 = all, 1 = slot 1, 2 = slot 2, etc.
+  {
+    int i = 3;
+    for(; i<8; i++) { voices[0].LFO[i-3] = data[i]; }
+    for(; i<15; i++) { voices[0].CH[i-8] = data[i]; }
+    for(; i<26; i++) { voices[0].M1[i-15] = data[i]; }
+    for(; i<37; i++) { voices[0].C1[i-26] = data[i]; }
+    for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
+    for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
+
+    ym2612.SetVoice(voices[0]);
+    currentProgram = 0;
+    LCDRedraw();
+  }
 }
 
 uint8_t lastProgram = 0;
 void ProgramChange(byte channel, byte program)
 {
-  if(channel == YM_CHANNEL || channel == YM_VELOCITY_CHANNEL)
-  {
-    if(program == 255)
-      program = maxValidVoices-1;
-    program %= maxValidVoices;
-    currentProgram = program;
-    LCDRedraw(lcdSelectionIndex);
-    ym2612.SetVoice(voices[currentProgram]);
-    Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
-    DumpVoiceData(voices[currentProgram]);
-    lastProgram = program;
-  }
+  if(program == 255)
+    program = maxValidVoices-1;
+  program %= maxValidVoices;
+  currentProgram = program;
+  LCDRedraw(lcdSelectionIndex);
+  ym2612.SetVoice(voices[currentProgram]);
+  Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
+  DumpVoiceData(voices[currentProgram]);
+  lastProgram = program;
 }
 
 void HandleSerialIn()
@@ -1011,9 +1106,166 @@ void ProgramNewFavorite()
   digitalWriteFast(leds[currentFavorite], HIGH);
 }
 
+void VSTMode()
+{
+  if(currentProgram != 0)
+  {
+    currentProgram = 0;
+    redrawLCDOnNextLoop = true;
+  }
+  if(strcmp(fileName, "VST") != 0)
+  {
+    memset(fileName, 0x00, MAX_FILE_NAME_SIZE);
+    strcpy(fileName, "VST");
+    maxValidVoices = 1;
+    Serial.println(fileName);
+    redrawLCDOnNextLoop = true;
+  }
+}
+
+void HandleNPRM(uint8_t channel)
+{
+  VSTMode();
+  uint8_t op = ((nprm.parameter/10)%10)-1;
+  for(int i = 0; i < MAX_CHANNELS_YM; i++)
+  {
+    switch(nprm.parameter)
+      {
+        case 10:
+        case 20:
+        case 30:
+        case 40:
+          ym2612.SetDetune(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[8] = nprm.value; break; case 1: voices[0].C1[8] = nprm.value;  break; case 2: voices[0].M2[8] = nprm.value;  break; case 3: voices[0].C2[8] = nprm.value;  break; }
+          break;
+        case 11:
+        case 21:
+        case 31:
+        case 41:
+          ym2612.SetMult(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[7] = nprm.value; break; case 1: voices[0].C1[7] = nprm.value;  break; case 2: voices[0].M2[7] = nprm.value;  break; case 3: voices[0].C2[7] = nprm.value;  break; }
+          break;
+        case 12:
+        case 22:
+        case 32:
+        case 42:
+          ym2612.SetTL(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[5] = nprm.value; break; case 1: voices[0].C1[5] = nprm.value;  break; case 2: voices[0].M2[5] = nprm.value;  break; case 3: voices[0].C2[5] = nprm.value;  break; }
+          break;
+        case 13:
+        case 23:
+        case 33:
+        case 43:
+          ym2612.SetAR(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[0] = nprm.value; break; case 1: voices[0].C1[0] = nprm.value;  break; case 2: voices[0].M2[0] = nprm.value;  break; case 3: voices[0].C2[0] = nprm.value;  break; }
+          break;
+        case 14:
+        case 24:
+        case 34:
+        case 44:
+          ym2612.SetD1R(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[1] = nprm.value; break; case 1: voices[0].C1[1] = nprm.value;  break; case 2: voices[0].M2[1] = nprm.value;  break; case 3: voices[0].C2[1] = nprm.value;  break; }
+          break;
+        case 15:
+        case 25:
+        case 35:
+        case 45:
+          ym2612.SetD2R(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[2] = nprm.value; break; case 1: voices[0].C1[2] = nprm.value;  break; case 2: voices[0].M2[2] = nprm.value;  break; case 3: voices[0].C2[2] = nprm.value;  break; }
+          break;
+        case 16:
+        case 26:
+        case 36:
+        case 46:
+          ym2612.SetD1L(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[4] = nprm.value; break; case 1: voices[0].C1[4] = nprm.value;  break; case 2: voices[0].M2[4] = nprm.value;  break; case 3: voices[0].C2[4] = nprm.value;  break; }
+          break;
+        case 17:
+        case 27:
+        case 37:
+        case 47:
+          ym2612.SetRR(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[3] = nprm.value; break; case 1: voices[0].C1[3] = nprm.value;  break; case 2: voices[0].M2[3] = nprm.value;  break; case 3: voices[0].C2[3] = nprm.value;  break; }
+          break;
+        case 18:
+        case 28:
+        case 38:
+        case 48:
+          ym2612.SetRateScaling(i, op, nprm.value);
+          switch(op){ case 0: voices[0].M1[6] = nprm.value; break; case 1: voices[0].C1[6] = nprm.value;  break; case 2: voices[0].M2[6] = nprm.value;  break; case 3: voices[0].C2[6] = nprm.value;  break; }
+          break;  
+        case 19:
+        case 29:
+        case 39:
+        case 49:
+        {
+          bool setAM = nprm.value > 63;
+          ym2612.SetAmplitudeModulation(i, op, setAM);
+          switch(op){ case 0: voices[0].M1[10] = setAM; break; case 1: voices[0].C1[10] = setAM;  break; case 2: voices[0].M2[10] = setAM;  break; case 3: voices[0].C2[10] = setAM;  break; }
+          break;  
+        }
+        case 50:
+        {
+          bool lfoEn = nprm.value > 63;
+          for(uint8_t i = 0; i < MAX_CHANNELS_YM; i++)
+            voices[i].LFO[4] = lfoEn;
+          ym2612.SetLFOEnabled(lfoEn);
+          break;
+        }
+        case 51:
+          for(uint8_t i = 0; i < MAX_CHANNELS_YM; i++)
+            voices[i].LFO[0] = nprm.value;
+          ym2612.SetLFOFreq(nprm.value);
+          break;
+        case 52:
+          ym2612.SetFreqModSens(i, nprm.value);
+          voices[0].CH[4] = nprm.value;
+          break;
+        case 53:
+          ym2612.SetAMSens(i, nprm.value);
+          voices[0].CH[3] = nprm.value;
+          break;
+        case 54:
+          ym2612.SetAlgo(i, nprm.value);
+          voices[0].CH[2] = nprm.value;
+          break;
+        case 55:
+          ym2612.SetFMFeedback(i, nprm.value);
+          voices[0].CH[1] = nprm.value;
+          break;
+        case 57:
+          ym2612.Reset();
+          break;
+        case 63:
+          sendPatchToVST = nprm.value;
+        break;
+        case 71:
+        case 72:
+        case 73:
+        case 74:
+        case 75:
+        case 76:
+        case 77:
+        {
+          uint8_t vstFav = nprm.parameter % 70;
+          if(vstFav != currentFavorite)
+          {
+            currentFavorite = vstFav;
+            UpdateLEDs();
+            ProgramNewFavorite();
+          }
+        }
+        break;
+        default:
+          Serial.println("NPRM DEFAULT");
+        break;
+      }
+    }
+  }
+
 void loop() 
 {
-  usbMIDI.read();
+  while (usbMIDI.read()) {};
   MIDI.read();
   HandleRotaryEncoder();
   if(redrawLCDOnNextLoop)
@@ -1028,5 +1280,10 @@ void loop()
   byte portARead = ~PINA;
   if(portARead)
     HandleFavoriteButtons(portARead);
+  if(sendPatchToVST != 0xFF)
+  {
+    SendPatchSysex(sendPatchToVST);
+    sendPatchToVST = 0xFF;
+  }
 }
  
