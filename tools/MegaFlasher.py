@@ -3,13 +3,6 @@
 
 #Make sure to place a 10uF or greater capacitor across the reset and ground pins on your Arduino!
 
-#MACOS Note! Requires SSL command to be ran!
-#This script will ask the user if they would like the certificates first, then attempt to install them automatically
-#If you would prefer to manuallu install these certificates, look below:
-#Run the following line in terminal
-#                'open /Applications/Python\ 3.6/Install\ Certificates.command'
-#Replace '3.6' with what ever version of python your running. Once this command is ran successfully, you shouldn't encounter any more certificate errors
-
 #Linux Note!
 #Linux python3 requires pyserial module. Run the following command in terminal to install it
 #                'sudo apt-get install python-serial python3-serial'
@@ -27,23 +20,21 @@ import requests
 from multiprocessing import Queue
 import json
 import urllib
+import certifi
 import os
 from io import StringIO
+requests.packages.urllib3.disable_warnings()
 
 def SSLCheck():
-    pyVersion = str(sys.version_info.major) + "." + str(sys.version_info.minor)
-    if(os.path.exists(ssl.get_default_verify_paths().openssl_cafile) == False):
-        print("The required SSL certificates were not found. Would you like to install them?")
-        answer = input("Install required SSL certificates? Y/N:")
-        answer = answer.upper()
-        if(answer == "YES" or answer == "Y"):
-            os.system("open /Applications/Python\\ " + pyVersion + "/Install\\ Certificates.command")
-            print("Installed SSL certificates. Continuing...")
-        else:
-            print("Required SSL certificates were not installed. Exiting.")
-            sys.exit()
+    try:
+        _create_unverified_https_context = ssl._create_unverified_context
+    except AttributeError:
+        # Legacy Python that doesn't verify HTTPS certificates by default
+        pass
+    else:
+        # Handle target environment that doesn't support HTTPS verification
+        ssl._create_default_https_context = _create_unverified_https_context
     
-
 def GetOS():
     os = ""
     if sys.platform.startswith('win'):
@@ -92,7 +83,7 @@ def serial_ports():
     return result
 
 if(OPERATING_SYSTEM == "OSX"):
-    SSLCheck()
+    SSLCheck() #MacOS gets the nuclear option for being dumb with ssl
 
 print("---MegaFlasher Python---")
 print("This script will detect your ArduinoISP serial port and invoke Avrdude for you.")
@@ -125,9 +116,11 @@ while inputValid == False:
         print(ports[selectedPort] + " selected")
 
 print("Fetching latest firmware...")
-r = requests.get('https://api.github.com/repos/AidanHockey5/MegaMIDI/releases')
-if(r.ok):
-    repoItems = json.loads(r.text or r.content)
+
+r = urllib.request.urlopen('https://api.github.com/repos/AidanHockey5/MegaMIDI/releases')
+
+if(r.getcode() == 200):
+    repoItems = json.load(r)
     latest = repoItems[0]["assets"][0]["browser_download_url"]
     print(latest)
     if(OPERATING_SYSTEM == "WIN"):
