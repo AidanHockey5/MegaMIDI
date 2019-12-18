@@ -2,7 +2,7 @@
 
 https://www.aidanlawrence.com/mega-midi-a-playable-version-of-my-hardware-sega-genesis-synth/
 
-[July 2019 Instruction Manual](https://www.aidanlawrence.com/wp-content/uploads/2019/07/MegaMidi5Manual.pdf)
+[Instruction Manual](https://www.aidanlawrence.com/wp-content/uploads/2019/07/MegaMidi5Manual.pdf)
 
 [Store Link](https://www.aidanlawrence.com/product/mega-midi-5/)
 
