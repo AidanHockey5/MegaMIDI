@@ -308,6 +308,8 @@ void YM2612::ClampSustainedKeys()
 
 void YM2612::SetVoiceManual(uint8_t slot, Voice v)
 {
+    SetLFOFreq(v.LFO[0]);
+
     SetFMFeedback(slot, v.CH[1]);
     SetAlgo(slot, v.CH[2]);
     SetAMSens(slot, v.CH[3]);
@@ -720,7 +722,7 @@ void YM2612::SetLFOEnabled(bool value)
   send(0x22, data, false);
 }
 
-void YM2612::SetLFOFreq(bool value)
+void YM2612::SetLFOFreq(uint8_t value)
 {
   uint8_t data = GetShadowValue(0x22, 0);
   data &= 0b11111000; //Mask LFOEnable
