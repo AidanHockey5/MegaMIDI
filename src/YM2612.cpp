@@ -324,27 +324,27 @@ void YM2612::SetVoiceManual(uint8_t slot, Voice v)
     SetDetune(slot, 0, v.M1[8]);
     SetAmplitudeModulation(slot, 0, v.M1[10]);
 
-    SetAR(slot, 1, v.C1[0]);
-    SetD1R(slot, 1, v.C1[1]);
-    SetD2R(slot, 1, v.C1[2]);
-    SetRR(slot, 1, v.C1[3]);
-    SetD1L(slot, 1, v.C1[4]);
-    SetTL(slot, 1, v.C1[5]);
+    SetAR(slot, 2, v.C1[0]);
+    SetD1R(slot, 2, v.C1[1]);
+    SetD2R(slot, 2, v.C1[2]);
+    SetRR(slot, 2, v.C1[3]);
+    SetD1L(slot, 2, v.C1[4]);
+    SetTL(slot, 2, v.C1[5]);
     SetRateScaling(slot, 1, v.C1[6]);
-    SetMult(slot, 1, v.C1[7]);
-    SetDetune(slot, 1, v.C1[8]);
-    SetAmplitudeModulation(slot, 1, v.C1[10]);
+    SetMult(slot, 2, v.C1[7]);
+    SetDetune(slot, 2, v.C1[8]);
+    SetAmplitudeModulation(slot, 2, v.C1[10]);
 
-    SetAR(slot, 2, v.M2[0]);
-    SetD1R(slot, 2, v.M2[1]);
-    SetD2R(slot, 2, v.M2[2]);
-    SetRR(slot, 2, v.M2[3]);
-    SetD1L(slot, 2, v.M2[4]);
-    SetTL(slot, 2, v.M2[5]);
-    SetRateScaling(slot, 2, v.M2[6]);
-    SetMult(slot, 2, v.M2[7]);
-    SetDetune(slot, 2, v.M2[8]);
-    SetAmplitudeModulation(slot, 2, v.M2[10]);
+    SetAR(slot, 1, v.M2[0]);
+    SetD1R(slot, 1, v.M2[1]);
+    SetD2R(slot, 1, v.M2[2]);
+    SetRR(slot, 1, v.M2[3]);
+    SetD1L(slot, 1, v.M2[4]);
+    SetTL(slot, 1, v.M2[5]);
+    SetRateScaling(slot, 1, v.M2[6]);
+    SetMult(slot, 1, v.M2[7]);
+    SetDetune(slot, 1, v.M2[8]);
+    SetAmplitudeModulation(slot, 1, v.M2[10]);
 
     SetAR(slot, 3, v.C2[0]);
     SetD1R(slot, 3, v.C2[1]);

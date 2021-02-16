@@ -1,5 +1,6 @@
 EESchema Schematic File Version 4
-EELAYER 30 0
+LIBS:YM2612_MIDI_SMD-cache
+EELAYER 26 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
@@ -31,7 +32,7 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/doc7593.pdf" H 3100 3200 50
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C6
+L device:C_Small C6
 U 1 1 5C59F836
 P 2250 2800
 F 0 "C6" V 2300 2900 50  0000 C CNN
@@ -57,7 +58,7 @@ F 3 "" H 2150 2900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R4
+L device:R_Small R4
 U 1 1 5C59F9B3
 P 2300 2500
 F 0 "R4" V 2200 2500 50  0000 C CNN
@@ -68,7 +69,7 @@ F 3 "~" H 2300 2500 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R5
+L device:R_Small R5
 U 1 1 5C59FA04
 P 2300 2600
 F 0 "R5" V 2400 2600 50  0000 C CNN
@@ -98,7 +99,7 @@ F 3 "" H 3200 1200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C3
+L device:C_Small C3
 U 1 1 5C59FFD6
 P 1550 1150
 F 0 "C3" H 1642 1196 50  0000 L CNN
@@ -142,7 +143,7 @@ F 3 "" H 3000 5200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:Crystal_Small-device Y1
+L device:Crystal_Small Y1
 U 1 1 5C5A088A
 P 2300 1800
 F 0 "Y1" V 2250 1700 50  0000 R CNN
@@ -157,7 +158,7 @@ Wire Wire Line
 Wire Wire Line
 	2300 1900 2500 1900
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C4
+L device:C_Small C4
 U 1 1 5C5A0B30
 P 2000 1700
 F 0 "C4" V 1771 1700 50  0000 C CNN
@@ -168,7 +169,7 @@ F 3 "~" H 2000 1700 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C5
+L device:C_Small C5
 U 1 1 5C5A0B70
 P 2000 1900
 F 0 "C5" V 2100 1900 50  0000 C CNN
@@ -225,7 +226,7 @@ $EndComp
 Text GLabel 2500 1500 0    50   Input ~ 0
 RESET
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C1
+L device:C_Small C1
 U 1 1 5C5A1F05
 P 1150 1150
 F 0 "C1" H 1242 1196 50  0000 L CNN
@@ -258,7 +259,7 @@ F 3 "" H 1150 1250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C2
+L device:C_Small C2
 U 1 1 5C5A2134
 P 1150 1800
 F 0 "C2" H 1242 1846 50  0000 L CNN
@@ -291,7 +292,7 @@ F 3 "" H 1150 1900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R3
+L device:R_Small R3
 U 1 1 5C5A289C
 P 2150 3500
 F 0 "R3" V 1954 3500 50  0000 C CNN
@@ -442,7 +443,7 @@ F 3 "" H 7550 2300 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C12
+L device:C_Small C12
 U 1 1 5C5AD082
 P 8300 2650
 F 0 "C12" V 8400 2650 50  0000 C CNN
@@ -468,7 +469,7 @@ MOL
 Text GLabel 7550 2600 2    50   Input ~ 0
 MOR
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C14
+L device:C_Small C14
 U 1 1 5C5AF9AE
 P 8550 2650
 F 0 "C14" V 8321 2650 50  0000 C CNN
@@ -504,7 +505,7 @@ PSG_WE
 Text GLabel 7450 4700 2    50   Input ~ 0
 PSG_OUT
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C11
+L device:C_Small C11
 U 1 1 5C5B854D
 P 8050 4400
 F 0 "C11" H 8142 4446 50  0000 L CNN
@@ -530,7 +531,7 @@ Connection ~ 8050 4600
 Wire Wire Line
 	8050 4600 8050 4800
 $Comp
-L YM2612_MIDI_SMD-rescue:H11L1-opto U1
+L opto:H11L1 U1
 U 1 1 5C732AD3
 P 2300 10150
 F 0 "U1" H 2500 10050 50  0000 L CNN
@@ -541,7 +542,7 @@ F 3 "https://www.fairchildsemi.com/datasheets/H1/H11L1M.pdf" H 2210 10150 50  00
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:DIN-5_180degree-conn J1
+L conn:DIN-5_180degree J1
 U 1 1 5C732F25
 P 900 9950
 F 0 "J1" H 900 9583 50  0000 C CNN
@@ -552,7 +553,7 @@ F 3 "http://www.mouser.com/ds/2/18/40_c091_abd_e-75918.pdf" H 900 9950 50  0001 
 	-1   0    0    1   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R2
+L device:R_Small R2
 U 1 1 5C746227
 P 1550 10050
 F 0 "R2" V 1354 10050 50  0000 C CNN
@@ -573,7 +574,7 @@ Wire Wire Line
 Wire Wire Line
 	600  10400 600  10050
 $Comp
-L YM2612_MIDI_SMD-rescue:D_Small-device D1
+L device:D_Small D1
 U 1 1 5C74BC0A
 P 1800 10250
 F 0 "D1" V 1750 10100 50  0000 L CNN
@@ -607,7 +608,7 @@ $EndComp
 Wire Wire Line
 	2300 9450 2300 9550
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C7
+L device:C_Small C7
 U 1 1 5C751EF7
 P 2550 9650
 F 0 "C7" H 2642 9696 50  0000 L CNN
@@ -645,7 +646,7 @@ F 3 "" H 2300 10450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R7
+L device:R_Small R7
 U 1 1 5C7540F9
 P 3050 9850
 F 0 "R7" H 3109 9896 50  0000 L CNN
@@ -680,7 +681,7 @@ MIDI_IN
 Text GLabel 3700 4400 2    50   Input ~ 0
 MIDI_IN
 $Comp
-L YM2612_MIDI_SMD-rescue:USB_B-conn J3
+L conn:USB_B J3
 U 1 1 5C76BA5B
 P 4650 8600
 F 0 "J3" H 4705 9067 50  0000 C CNN
@@ -747,7 +748,7 @@ F 3 "" H 3100 1200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C8
+L device:C_Small C8
 U 1 1 5C85CD26
 P 5050 9950
 F 0 "C8" H 5142 9996 50  0000 L CNN
@@ -783,7 +784,7 @@ RE_SW
 Text GLabel 3700 4200 2    50   Input ~ 0
 RE_SW
 $Comp
-L YM2612_MIDI_SMD-rescue:Rotary_Encoder_Switch-device SW1
+L device:Rotary_Encoder_Switch SW1
 U 1 1 5C857061
 P 4650 9950
 F 0 "SW1" H 4650 10317 50  0000 C CNN
@@ -819,7 +820,7 @@ RE_B
 Text GLabel 3700 2400 2    50   Input ~ 0
 SD_CS
 $Comp
-L YM2612_MIDI_SMD-rescue:Micro_SD_Card-conn J7
+L conn:Micro_SD_Card J7
 U 1 1 5C8B6F29
 P 14750 6950
 F 0 "J7" H 14700 7667 50  0000 C CNN
@@ -841,7 +842,7 @@ F 3 "" H 15550 7550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LD1117S33TR_SOT223-regul U6
+L regul:LD1117S33TR_SOT223 U6
 U 1 1 5C8BBFB2
 P 10450 6700
 F 0 "U6" H 10450 6942 50  0000 C CNN
@@ -852,7 +853,7 @@ F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/da
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C16
+L device:C_Small C16
 U 1 1 5C8C896F
 P 10250 7200
 F 0 "C16" V 10021 7200 50  0000 C CNN
@@ -863,7 +864,7 @@ F 3 "~" H 10250 7200 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C17
+L device:C_Small C17
 U 1 1 5C8C8BAC
 P 10650 7200
 F 0 "C17" V 10421 7200 50  0000 C CNN
@@ -940,7 +941,7 @@ Wire Wire Line
 Wire Wire Line
 	13450 7150 13450 7700
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 3 1 5C97A52C
 P 12650 7150
 F 0 "U7" H 12750 7350 50  0000 C CNN
@@ -951,7 +952,7 @@ F 3 "" H 12650 7150 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 2 1 5C97A629
 P 12650 6850
 F 0 "U7" H 12750 7050 50  0000 C CNN
@@ -962,7 +963,7 @@ F 3 "" H 12650 6850 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 5 1 5C97AAD9
 P 14700 8550
 F 0 "U7" H 14700 8865 50  0000 C CNN
@@ -973,7 +974,7 @@ F 3 "" H 14700 8550 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 6 1 5C97ABE0
 P 14700 9000
 F 0 "U7" H 14950 9200 50  0000 C CNN
@@ -984,7 +985,7 @@ F 3 "" H 14700 9000 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 4 1 5C97ACE9
 P 14700 8050
 F 0 "U7" H 14700 8365 50  0000 C CNN
@@ -995,7 +996,7 @@ F 3 "" H 14700 8050 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:4050-cmos4000 U7
+L cmos4000:4050 U7
 U 1 1 5C97ADF6
 P 12650 6550
 F 0 "U7" H 12750 6750 50  0000 C CNN
@@ -1012,7 +1013,7 @@ Wire Wire Line
 Wire Wire Line
 	13100 7050 13850 7050
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C28
+L device:C_Small C28
 U 1 1 5CA1101D
 P 13200 8600
 F 0 "C28" H 13292 8646 50  0000 L CNN
@@ -1115,7 +1116,7 @@ F 3 "" H 14650 9100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C26
+L device:C_Small C26
 U 1 1 5CA84C18
 P 12750 8600
 F 0 "C26" H 12842 8646 50  0000 L CNN
@@ -1156,7 +1157,7 @@ MISO
 Text GLabel 1550 1900 3    50   Input ~ 0
 RESET
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R1
+L device:R_Small R1
 U 1 1 5CAC5A2B
 P 1550 1800
 F 0 "R1" H 1609 1846 50  0000 L CNN
@@ -1178,7 +1179,7 @@ F 3 "" H 1550 1700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW2
+L switches:SW_Push_Dual SW2
 U 1 1 5CAE4928
 P 6100 9500
 F 0 "SW2" H 6100 9785 50  0000 C CNN
@@ -1200,7 +1201,7 @@ F 3 "" H 6300 9700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW4
+L switches:SW_Push_Dual SW4
 U 1 1 5CAE5BBE
 P 6900 9500
 F 0 "SW4" H 6900 9785 50  0000 C CNN
@@ -1222,7 +1223,7 @@ F 3 "" H 7100 9700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW6
+L switches:SW_Push_Dual SW6
 U 1 1 5CAF36C5
 P 7700 9500
 F 0 "SW6" H 7700 9785 50  0000 C CNN
@@ -1244,7 +1245,7 @@ F 3 "" H 7900 9700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW9
+L switches:SW_Push_Dual SW9
 U 1 1 5CB011D9
 P 8500 9500
 F 0 "SW9" H 8500 9785 50  0000 C CNN
@@ -1333,7 +1334,7 @@ F 3 "" H 1750 7200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_POT-device RV1
+L device:R_POT RV1
 U 1 1 5C76ADA7
 P 2250 7150
 F 0 "RV1" H 2180 7196 50  0000 R CNN
@@ -1372,7 +1373,7 @@ F 3 "" H 2250 7300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:WC1602A-display DS1
+L display:WC1602A DS1
 U 1 1 5C78ADBA
 P 1750 8150
 F 0 "DS1" H 1850 9000 50  0000 C CNN
@@ -1389,7 +1390,7 @@ Wire Wire Line
 Text GLabel 1350 7750 0    50   Input ~ 0
 LCD_RS
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R6
+L device:R_Small R6
 U 1 1 5C7AD07A
 P 2400 7850
 F 0 "R6" V 2204 7850 50  0000 C CNN
@@ -1432,7 +1433,7 @@ LCD_RS
 Text GLabel 3700 3000 2    50   Input ~ 0
 LCD_E
 $Comp
-L YM2612_MIDI_SMD-rescue:Conn_02x03_Odd_Even-conn J5
+L conn:Conn_02x03_Odd_Even J5
 U 1 1 5C743A87
 P 7350 8650
 F 0 "J5" H 7400 8950 50  0000 L CNN
@@ -1473,7 +1474,7 @@ F 3 "" H 7650 8550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:Audio-Jack-3-conn J6
+L conn:Audio-Jack-3 J6
 U 1 1 5C757A46
 P 10000 8700
 F 0 "J6" H 9976 9025 50  0000 C CNN
@@ -1495,7 +1496,7 @@ F 3 "" H 9800 8800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D5
+L device:LED_Small D5
 U 1 1 5C8A3270
 P 9900 9700
 F 0 "D5" H 10050 9700 50  0000 C CNN
@@ -1506,7 +1507,7 @@ F 3 "~" V 9900 9700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D6
+L device:LED_Small D6
 U 1 1 5C8A3B0A
 P 9900 9800
 F 0 "D6" H 10050 9800 50  0000 C CNN
@@ -1517,7 +1518,7 @@ F 3 "~" V 9900 9800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D7
+L device:LED_Small D7
 U 1 1 5C8A3C14
 P 9900 9900
 F 0 "D7" H 10050 9900 50  0000 C CNN
@@ -1528,7 +1529,7 @@ F 3 "~" V 9900 9900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D8
+L device:LED_Small D8
 U 1 1 5C8A3D20
 P 9900 10000
 F 0 "D8" H 10050 10000 50  0000 C CNN
@@ -1539,7 +1540,7 @@ F 3 "~" V 9900 10000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D9
+L device:LED_Small D9
 U 1 1 5C8A3E32
 P 9900 10100
 F 0 "D9" H 10050 10100 50  0000 C CNN
@@ -1550,7 +1551,7 @@ F 3 "~" V 9900 10100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D10
+L device:LED_Small D10
 U 1 1 5C8A3F42
 P 9900 10200
 F 0 "D10" H 10050 10200 50  0000 C CNN
@@ -1561,7 +1562,7 @@ F 3 "~" V 9900 10200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D11
+L device:LED_Small D11
 U 1 1 5C8A4054
 P 9900 10300
 F 0 "D11" H 10050 10300 50  0000 C CNN
@@ -1572,7 +1573,7 @@ F 3 "~" V 9900 10300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LED_Small-device D4
+L device:LED_Small D4
 U 1 1 5C8A41EA
 P 9900 9600
 F 0 "D4" H 10050 9600 50  0000 C CNN
@@ -1651,7 +1652,7 @@ PSG_RDY
 Text GLabel 2500 3800 0    50   Input ~ 0
 PSG_RDY
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW3
+L switches:SW_Push_Dual SW3
 U 1 1 5CA57572
 P 6100 10300
 F 0 "SW3" H 6100 10585 50  0000 C CNN
@@ -1673,7 +1674,7 @@ F 3 "" H 6300 10500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW5
+L switches:SW_Push_Dual SW5
 U 1 1 5CA5757F
 P 6900 10300
 F 0 "SW5" H 6900 10585 50  0000 C CNN
@@ -1695,7 +1696,7 @@ F 3 "" H 7100 10500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW7
+L switches:SW_Push_Dual SW7
 U 1 1 5CA5758C
 P 7700 10300
 F 0 "SW7" H 7700 10585 50  0000 C CNN
@@ -1717,7 +1718,7 @@ F 3 "" H 7900 10500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW10
+L switches:SW_Push_Dual SW10
 U 1 1 5CA57599
 P 8500 10300
 F 0 "SW10" H 8500 10585 50  0000 C CNN
@@ -1765,7 +1766,7 @@ F 3 "" H 950 7650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:SW_Push_Dual-switches SW8
+L switches:SW_Push_Dual SW8
 U 1 1 5C8D55B0
 P 8450 8650
 F 0 "SW8" H 8450 8935 50  0000 C CNN
@@ -1791,7 +1792,7 @@ $EndComp
 NoConn ~ 8650 8650
 NoConn ~ 8250 8850
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C10
+L device:C_Small C10
 U 1 1 5C8FE8E9
 P 7850 1700
 F 0 "C10" V 7950 1700 50  0000 C CNN
@@ -1804,7 +1805,7 @@ $EndComp
 Text GLabel 8650 4450 3    50   Input ~ 0
 PSG_RDY
 $Comp
-L YM2612_MIDI_SMD-rescue:R-device R9
+L device:R R9
 U 1 1 5C9018FA
 P 8650 4300
 F 0 "R9" H 8720 4346 50  0000 L CNN
@@ -1826,7 +1827,7 @@ F 3 "" H 8650 4150 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R10
+L device:R_Small R10
 U 1 1 5C91E2BD
 P 9450 9600
 F 0 "R10" V 9400 9750 50  0000 C CNN
@@ -1837,7 +1838,7 @@ F 3 "~" H 9450 9600 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R11
+L device:R_Small R11
 U 1 1 5C91F7AE
 P 9450 9700
 F 0 "R11" V 9400 9850 50  0000 C CNN
@@ -1848,7 +1849,7 @@ F 3 "~" H 9450 9700 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R12
+L device:R_Small R12
 U 1 1 5C91F8CA
 P 9450 9800
 F 0 "R12" V 9400 9950 50  0000 C CNN
@@ -1859,7 +1860,7 @@ F 3 "~" H 9450 9800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R13
+L device:R_Small R13
 U 1 1 5C91F9E8
 P 9450 9900
 F 0 "R13" V 9400 10050 50  0000 C CNN
@@ -1870,7 +1871,7 @@ F 3 "~" H 9450 9900 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R14
+L device:R_Small R14
 U 1 1 5C91FB08
 P 9450 10000
 F 0 "R14" V 9400 10150 50  0000 C CNN
@@ -1881,7 +1882,7 @@ F 3 "~" H 9450 10000 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R15
+L device:R_Small R15
 U 1 1 5C91FC2A
 P 9450 10100
 F 0 "R15" V 9400 10250 50  0000 C CNN
@@ -1892,7 +1893,7 @@ F 3 "~" H 9450 10100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R16
+L device:R_Small R16
 U 1 1 5C91FD4E
 P 9450 10200
 F 0 "R16" V 9400 10350 50  0000 C CNN
@@ -1903,7 +1904,7 @@ F 3 "~" H 9450 10200 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R17
+L device:R_Small R17
 U 1 1 5C91FE74
 P 9450 10300
 F 0 "R17" V 9400 10450 50  0000 C CNN
@@ -1948,7 +1949,7 @@ F 3 "" H 9350 10400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:Conn_01x01_Male-conn J2
+L conn:Conn_01x01_Male J2
 U 1 1 5C9FF695
 P 1150 2250
 F 0 "J2" V 1210 2291 50  0000 L CNN
@@ -1980,7 +1981,7 @@ Wire Wire Line
 Wire Wire Line
 	7650 2200 7550 2200
 $Comp
-L YM2612_MIDI_SMD-rescue:MountingHole-mechanical H2
+L mechanical:MountingHole H2
 U 1 1 5CBC8656
 P 11150 10650
 F 0 "H2" H 11250 10696 50  0000 L CNN
@@ -1991,7 +1992,7 @@ F 3 "~" H 11150 10650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:MountingHole-mechanical H1
+L mechanical:MountingHole H1
 U 1 1 5CBC8A5E
 P 11150 10500
 F 0 "H1" H 11250 10546 50  0000 L CNN
@@ -2002,7 +2003,7 @@ F 3 "~" H 11150 10500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:MountingHole-mechanical H3
+L mechanical:MountingHole H3
 U 1 1 5CBC8B9A
 P 11150 10800
 F 0 "H3" H 11250 10846 50  0000 L CNN
@@ -2013,7 +2014,7 @@ F 3 "~" H 11150 10800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:MountingHole-mechanical H4
+L mechanical:MountingHole H4
 U 1 1 5CBC8CB8
 P 11150 10950
 F 0 "H4" H 11250 10996 50  0000 L CNN
@@ -2024,7 +2025,7 @@ F 3 "~" H 11150 10950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:MountingHole-mechanical H5
+L mechanical:MountingHole H5
 U 1 1 5CBC8DCC
 P 11150 11100
 F 0 "H5" H 11250 11146 50  0000 L CNN
@@ -2174,7 +2175,7 @@ F 3 "" H 8550 2750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:TL072-linear U8
+L linear:TL072 U8
 U 1 1 5D1346EA
 P 12700 1700
 F 0 "U8" H 13041 1746 50  0000 L CNN
@@ -2185,7 +2186,7 @@ F 3 "http://www.ti.com/lit/ds/symlink/tl071.pdf" H 12700 1700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:TL072-linear U8
+L linear:TL072 U8
 U 2 1 5D1347DF
 P 12700 3300
 F 0 "U8" H 13041 3346 50  0000 L CNN
@@ -2225,7 +2226,7 @@ Connection ~ 12600 1300
 Wire Wire Line
 	12600 1300 12600 1400
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C27
+L device:C_Small C27
 U 1 1 5D13E1F0
 P 12900 1300
 F 0 "C27" V 12671 1300 50  0000 C CNN
@@ -2249,7 +2250,7 @@ $EndComp
 Wire Wire Line
 	13000 1300 13150 1300
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R18
+L device:R_Small R18
 U 1 1 5D1450AF
 P 10300 900
 F 0 "R18" H 10359 946 50  0000 L CNN
@@ -2260,7 +2261,7 @@ F 3 "~" H 10300 900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R19
+L device:R_Small R19
 U 1 1 5D1454D6
 P 10300 1300
 F 0 "R19" H 10359 1346 50  0000 L CNN
@@ -2349,7 +2350,7 @@ F 3 "" H 12400 3200 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:CP_Small-device C18
+L device:CP_Small C18
 U 1 1 5D161872
 P 10750 1300
 F 0 "C18" H 10838 1346 50  0000 L CNN
@@ -2366,7 +2367,7 @@ MOR
 Text GLabel 10300 2600 0    50   Input ~ 0
 PSG_OUT
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R20
+L device:R_Small R20
 U 1 1 5D1789D7
 P 10400 2100
 F 0 "R20" H 10459 2146 50  0000 L CNN
@@ -2391,7 +2392,7 @@ F 3 "" H 10400 2200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R22
+L device:R_Small R22
 U 1 1 5D17DC49
 P 10400 3300
 F 0 "R22" H 10459 3346 50  0000 L CNN
@@ -2418,7 +2419,7 @@ Connection ~ 10400 3200
 Wire Wire Line
 	10300 2600 10400 2600
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R21
+L device:R_Small R21
 U 1 1 5D19B639
 P 10400 2700
 F 0 "R21" H 10459 2746 50  0000 L CNN
@@ -2443,7 +2444,7 @@ Connection ~ 10400 2600
 Wire Wire Line
 	10400 2600 10700 2600
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C20
+L device:C_Small C20
 U 1 1 5D1A4909
 P 10900 2400
 F 0 "C20" V 10671 2400 50  0000 C CNN
@@ -2454,7 +2455,7 @@ F 3 "~" H 10900 2400 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C21
+L device:C_Small C21
 U 1 1 5D1A4A65
 P 10900 2850
 F 0 "C21" V 10671 2850 50  0000 C CNN
@@ -2474,7 +2475,7 @@ Wire Wire Line
 	10700 2850 10800 2850
 Connection ~ 10700 2600
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C19
+L device:C_Small C19
 U 1 1 5D1AFB7B
 P 10900 2000
 F 0 "C19" V 10671 2000 50  0000 C CNN
@@ -2485,7 +2486,7 @@ F 3 "~" H 10900 2000 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C22
+L device:C_Small C22
 U 1 1 5D1AFD3D
 P 10900 3200
 F 0 "C22" V 10671 3200 50  0000 C CNN
@@ -2500,7 +2501,7 @@ Wire Wire Line
 Wire Wire Line
 	10400 2000 10800 2000
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R24
+L device:R_Small R24
 U 1 1 5D1BB90B
 P 11100 2400
 F 0 "R24" V 10904 2400 50  0000 C CNN
@@ -2511,7 +2512,7 @@ F 3 "~" H 11100 2400 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R25
+L device:R_Small R25
 U 1 1 5D1BBB3B
 P 11100 2850
 F 0 "R25" V 10904 2850 50  0000 C CNN
@@ -2522,7 +2523,7 @@ F 3 "~" H 11100 2850 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R23
+L device:R_Small R23
 U 1 1 5D1BC333
 P 11100 2000
 F 0 "R23" V 10904 2000 50  0000 C CNN
@@ -2533,7 +2534,7 @@ F 3 "~" H 11100 2000 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R26
+L device:R_Small R26
 U 1 1 5D1BC501
 P 11100 3200
 F 0 "R26" V 10904 3200 50  0000 C CNN
@@ -2558,7 +2559,7 @@ Wire Wire Line
 Wire Wire Line
 	11400 2850 11400 3200
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R27
+L device:R_Small R27
 U 1 1 5D1FF607
 P 12600 2450
 F 0 "R27" V 12404 2450 50  0000 C CNN
@@ -2579,7 +2580,7 @@ Wire Wire Line
 Wire Wire Line
 	13000 2450 13000 1700
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C24
+L device:C_Small C24
 U 1 1 5D2369D4
 P 12600 2750
 F 0 "C24" V 12371 2750 50  0000 C CNN
@@ -2595,7 +2596,7 @@ Wire Wire Line
 	13000 2750 13000 2450
 Connection ~ 13000 2450
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R28
+L device:R_Small R28
 U 1 1 5D2448FB
 P 12600 4100
 F 0 "R28" V 12404 4100 50  0000 C CNN
@@ -2606,7 +2607,7 @@ F 3 "~" H 12600 4100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C25
+L device:C_Small C25
 U 1 1 5D244A15
 P 12600 4400
 F 0 "C25" V 12371 4400 50  0000 C CNN
@@ -2648,7 +2649,7 @@ Wire Wire Line
 	13000 1700 13350 1700
 Connection ~ 13000 1700
 $Comp
-L YM2612_MIDI_SMD-rescue:CP_Small-device C29
+L device:CP_Small C29
 U 1 1 5D283722
 P 13450 1700
 F 0 "C29" V 13675 1700 50  0000 C CNN
@@ -2659,7 +2660,7 @@ F 3 "~" H 13450 1700 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:CP_Small-device C30
+L device:CP_Small C30
 U 1 1 5D283BF4
 P 13450 3300
 F 0 "C30" V 13675 3300 50  0000 C CNN
@@ -2682,7 +2683,7 @@ Wire Notes Line
 Wire Wire Line
 	10150 6700 10150 7200
 $Comp
-L YM2612_MIDI_SMD-rescue:LD1117S50TR_SOT223-regul U10
+L regul:LD1117S50TR_SOT223 U10
 U 1 1 5D1F87E3
 P 8950 6700
 F 0 "U10" H 9100 6450 50  0000 C CNN
@@ -2693,7 +2694,7 @@ F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/da
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C23
+L device:C_Small C23
 U 1 1 5D217996
 P 8450 6800
 F 0 "C23" V 8221 6800 50  0000 C CNN
@@ -2723,7 +2724,7 @@ F 3 "" H 8950 7100 50  0001 C CNN
 $EndComp
 Connection ~ 8950 7000
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C32
+L device:C_Small C32
 U 1 1 5D22D834
 P 9350 6800
 F 0 "C32" V 9121 6800 50  0000 C CNN
@@ -2752,7 +2753,7 @@ F 3 "" H 9550 6500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LD1117S50TR_SOT223-regul U9
+L regul:LD1117S50TR_SOT223 U9
 U 1 1 5D264A89
 P 8950 5950
 F 0 "U9" H 8950 6192 50  0000 C CNN
@@ -2776,7 +2777,7 @@ $EndComp
 Wire Wire Line
 	8950 6250 8950 6300
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C15
+L device:C_Small C15
 U 1 1 5D26CE79
 P 8450 6150
 F 0 "C15" V 8221 6150 50  0000 C CNN
@@ -2792,7 +2793,7 @@ Wire Wire Line
 	8450 6250 8950 6250
 Connection ~ 8950 6250
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C31
+L device:C_Small C31
 U 1 1 5D27D661
 P 9350 6150
 F 0 "C31" V 9121 6150 50  0000 C CNN
@@ -2964,7 +2965,7 @@ F 3 "" H 4750 6250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:LM2733XMF-dc-dc U5
+L dc-dc:LM2733XMF U5
 U 1 1 5D275B4B
 P 5450 6600
 F 0 "U5" H 5450 6967 50  0000 C CNN
@@ -2975,7 +2976,7 @@ F 3 "http://www.ti.com/lit/ds/symlink/lm2733.pdf" H 5450 6700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R30
+L device:R_Small R30
 U 1 1 5D275E47
 P 5850 6700
 F 0 "R30" V 5700 6700 50  0000 C CNN
@@ -2986,7 +2987,7 @@ F 3 "~" H 5850 6700 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C13
+L device:C_Small C13
 U 1 1 5D276315
 P 6050 6800
 F 0 "C13" V 6150 6800 50  0000 C CNN
@@ -2997,7 +2998,7 @@ F 3 "~" H 6050 6800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:D_Schottky_ALT-device D2
+L device:D_Schottky_ALT D2
 U 1 1 5D277587
 P 6000 6500
 F 0 "D2" H 6000 6284 50  0000 C CNN
@@ -3008,7 +3009,7 @@ F 3 "~" H 6000 6500 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L YM2612_MIDI_SMD-rescue:L_Small-device L1
+L device:L_Small L1
 U 1 1 5D277B83
 P 5450 6100
 F 0 "L1" V 5272 6100 50  0000 C CNN
@@ -3027,7 +3028,7 @@ Wire Wire Line
 Wire Wire Line
 	5750 6100 5750 6500
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R8
+L device:R_Small R8
 U 1 1 5D2899A5
 P 5150 6600
 F 0 "R8" H 5000 6650 50  0000 L CNN
@@ -3050,7 +3051,7 @@ Wire Wire Line
 Wire Wire Line
 	4750 6500 4900 6500
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C9
+L device:C_Small C9
 U 1 1 5D2ACB8D
 P 4900 6900
 F 0 "C9" H 4750 6950 50  0000 L CNN
@@ -3074,7 +3075,7 @@ $EndComp
 Wire Wire Line
 	5450 6900 5450 7000
 $Comp
-L YM2612_MIDI_SMD-rescue:R_Small-device R29
+L device:R_Small R29
 U 1 1 5D2BF3F1
 P 5750 6900
 F 0 "R29" H 5691 6854 50  0000 R CNN
@@ -3095,7 +3096,7 @@ Connection ~ 5750 6700
 Wire Wire Line
 	5950 6700 6200 6700
 $Comp
-L YM2612_MIDI_SMD-rescue:C_Small-device C33
+L device:C_Small C33
 U 1 1 5D30A4EA
 P 6200 6900
 F 0 "C33" H 6300 6950 50  0000 L CNN

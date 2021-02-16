@@ -46,12 +46,12 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.3"
+#define FW_VERSION "1.4"
 
 
 
 #define F_CPU 16000000UL
-
+#include <SPI.h>
 #include "usb_midi_serial.h"
 #include <Arduino.h>
 #include "Voice.h"
@@ -244,7 +244,9 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
   LoadFile(FIRST_FILE);
   ReadVoiceData();
-  ym2612.SetVoice(voices[0]);
+  //ym2612.SetVoice(voices[0]);
+  for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+      ym2612.SetVoiceManual(i, voices[0]);
   DumpVoiceData(voices[0]);
   LCDRedraw();
 }
@@ -386,7 +388,9 @@ bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
     SDReadFailure();
   }
   ReadVoiceData();
-  ym2612.SetVoice(voices[0]);
+  //ym2612.SetVoice(voices[0]);
+  for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+    ym2612.SetVoiceManual(i, voices[0]);
   currentProgram = 0;
   LCDRedraw();
   return true;
@@ -449,7 +453,9 @@ bool LoadFile(String req) //Request a file (string) to load
     while(true){}
   }
   ReadVoiceData();
-  ym2612.SetVoice(voices[0]);
+  //ym2612.SetVoice(voices[0]);
+  for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+    ym2612.SetVoiceManual(i, voices[0]);
   currentProgram = 0;
   LCDRedraw();
   return true;
@@ -552,7 +558,9 @@ void ResetSoundChips()
 {
   ym2612.Reset();
   sn76489.Reset();
-  ym2612.SetVoice(voices[currentProgram]);
+  //ym2612.SetVoice(voices[currentProgram]);
+  for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+    ym2612.SetVoiceManual(i, voices[currentProgram]);
   Serial.println("Soundchips Reset");
 }
 
@@ -706,7 +714,9 @@ void KeyOn(byte channel, byte key, byte velocity)
       else if(ymVelocityEnabledFlag)
       {
         ymVelocityEnabledFlag = false;
-        ym2612.SetVoice(voices[currentProgram]);
+        for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+          ym2612.SetVoiceManual(i, voices[currentProgram]);
+        //ym2612.SetVoice(voices[currentProgram]);
       }
       ym2612.SetChannelOn(key+SEMITONE_ADJ_YM, velocity, ymVelocityEnabledFlag);
     }
@@ -824,7 +834,9 @@ void SystemExclusive(byte *data, uint16_t length)
     for(; i<48; i++) { voices[0].M2[i-37] = data[i]; }
     for(; i<59; i++) { voices[0].C2[i-48] = data[i]; }
 
-    ym2612.SetVoice(voices[0]);
+    //ym2612.SetVoice(voices[0]);
+    for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+      ym2612.SetVoiceManual(i, voices[0]);
     currentProgram = 0;
     LCDRedraw();
   }
@@ -838,7 +850,8 @@ void ProgramChange(byte channel, byte program)
   program %= maxValidVoices;
   currentProgram = program;
   LCDRedraw(lcdSelectionIndex);
-  ym2612.SetVoice(voices[currentProgram]);
+  for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+      ym2612.SetVoiceManual(i, voices[currentProgram]);
   Serial.print("Current Voice Number: "); Serial.print(currentProgram); Serial.print("/"); Serial.println(maxValidVoices-1);
   DumpVoiceData(voices[currentProgram]);
   lastProgram = program;
@@ -1058,10 +1071,16 @@ void HandleFavoriteButtons(byte portValue)
   if(!favoriteProgrammed)
   {
     if(currentFavorite != 0xFF)
-      ym2612.SetVoice(GetFavoriteFromEEPROM(currentFavorite));
+    {
+      Voice v = GetFavoriteFromEEPROM(currentFavorite);
+      for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+        ym2612.SetVoiceManual(i, v);
+    }
     else
     {
-      ym2612.SetVoice(voices[currentProgram]);
+      //ym2612.SetVoice(voices[currentProgram]);
+      for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
+        ym2612.SetVoiceManual(i, voices[currentProgram]);
       LCDRedraw(lcdSelectionIndex);
       currentFavorite = 0xFF;
     }
@@ -1123,10 +1142,13 @@ void VSTMode()
   }
 }
 
+static const uint8_t OperatorMap[4] = {0,2,1,3};
+
 void HandleNPRM(uint8_t channel)
 {
   VSTMode();
   uint8_t op = ((nprm.parameter/10)%10)-1;
+  op = OperatorMap[op]; 
   for(int i = 0; i < MAX_CHANNELS_YM; i++)
   {
     switch(nprm.parameter)
