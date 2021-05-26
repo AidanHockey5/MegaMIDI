@@ -579,6 +579,7 @@ void ReadVoiceData()
       //Ignore comments
       if(l.startsWith("//"))
         continue;
+      //Ignore voices with no instrument name
       if(l.startsWith("@:"+String(voiceCount)+" no Name"))
       {
         maxValidVoices = voiceCount;
@@ -620,7 +621,7 @@ void ReadVoiceData()
           voices[voiceCount].C2[i] = vDataRaw[5][i];
         voiceCount++;
       }
-      if(voiceCount == MAX_VOICES-1)
+      if(voiceCount == MAX_VOICES)
         break;
   }
   if(!foundNoName)
