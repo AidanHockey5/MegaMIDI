@@ -103,7 +103,6 @@ long encoderPos = 0;
 #define LCD_ROWS 4
 #define LCD_COLS 20
 uint16_t fileNameScrollIndex = 0;
-String fileScroll;
 uint8_t lcdSelectionIndex = 0;
 LiquidCrystal lcd(17, 26, 38, 39, 40, 41, 42, 43, 44, 45); //PC7 & PB6 + Same data bus as sound chips
 bool redrawLCDOnNextLoop = false;
@@ -392,6 +391,7 @@ bool LoadFile(byte strategy) //Request a file with NEXT, PREV, FIRST commands
   for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
     ym2612.SetVoiceManual(i, voices[0]);
   currentProgram = 0;
+  fileNameScrollIndex = 0;  // Reset fileName scroll
   LCDRedraw();
   return true;
 }
@@ -457,6 +457,7 @@ bool LoadFile(String req) //Request a file (string) to load
   for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
     ym2612.SetVoiceManual(i, voices[0]);
   currentProgram = 0;
+  fileNameScrollIndex = 0;  // Reset fileName scroll
   LCDRedraw();
   return true;
 }
@@ -512,7 +513,6 @@ void LCDRedraw(uint8_t graphicCursorPos)
   lcd.setCursor(1, 0);
   String fn = fileName;
   fn = fn.remove(LCD_COLS-1);
-  fileScroll = fileName;
   lcd.print(fn);
   lcd.setCursor(1, 1);
   if(isFileValid)
@@ -979,7 +979,8 @@ void ScrollFileNameLCD()
 
     //Draw filename substring    
     lcd.setCursor(1, 0);
-    String sbStr = fileScroll.substring(fileNameScrollIndex, fileNameScrollIndex+LCD_COLS-1);
+    String fn = fileName;
+    String sbStr = fn.substring(fileNameScrollIndex, fileNameScrollIndex+LCD_COLS-1);
     fileNameScrollIndex++;
     if(fileNameScrollIndex+(LCD_COLS-2) >= strlen(fileName))
     {
