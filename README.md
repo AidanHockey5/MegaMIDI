@@ -45,7 +45,7 @@ All of my source material has been made open-source. Want to build your own Mega
 # Tools
 The firmware for this project was developed in [Visual Studio Code](https://code.visualstudio.com/) with the [PlatformIO extention.](https://docs.platformio.org/en/latest/ide/vscode.html) I used the Teensyduino (ArduinoTeensy) toolchain.
 
-The schematics/PCB files were made with [KiCAD.](http://kicad-pcb.org/) Specifically, version 5.0.2.
+The schematics/PCB files were made with [KiCAD.](http://kicad.org/) Specifically, version 5.0.2.
 
 Precompiled firmware HEX files can be found here:
 https://github.com/AidanHockey5/MegaMIDI/releases/
