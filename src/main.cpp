@@ -46,7 +46,7 @@ Default AVRDUDE command is:
 avrdude -c arduino -p usb1286 -P COM16 -b 19200 -U flash:w:"LOCATION_OF_YOUR_PROJECT_FOLDER\.pioenvs\teensy20pp\firmware.hex":a -U lfuse:w:0x5E:m -U hfuse:w:0xDF:m -U efuse:w:0xF3:m 
 */
 
-#define FW_VERSION "1.5"
+#define FW_VERSION "1.51"
 
 
 
@@ -98,6 +98,9 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 #define ENC_BTN 0
 Encoder encoder(18, 19);
 long encoderPos = 0;
+bool isEncoderInverted = false;
+uint16_t encoderHoldCount = 0;
+uint32_t encoderInvertEEPROMLocation = sizeof(FavoriteVoice)*7+1;
 
 //LCD
 #define LCD_ROWS 4
@@ -151,7 +154,7 @@ void ReadVoiceData();
 void HandleSerialIn();
 void DumpVoiceData(Voice v);
 void ResetSoundChips();
-void HandleRotaryButtonDown();
+void HandleRotaryButton();
 void HandleRotaryEncoder();
 void LCDRedraw(uint8_t graphicCursorPos = 0);
 void ScrollFileNameLCD();
@@ -185,6 +188,7 @@ void setup()
   lcd.createChar(0, arrowCharLeft);
   lcd.createChar(1, arrowCharRight);
   lcd.createChar(2, heartChar);
+  lcd.createChar(3, arrowCharInvertedRight);
   lcd.begin(LCD_COLS, LCD_ROWS);
 
   lcd.print("     Welcome To");
@@ -240,9 +244,12 @@ void setup()
     SDReadFailure();
   }
   removeMeta();
-  attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButtonDown, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENC_BTN), HandleRotaryButton, RISING);
   LoadFile(FIRST_FILE);
   ReadVoiceData();
+  if(EEPROM.read(encoderInvertEEPROMLocation) == 0xFF) //eeprom not initialized
+    EEPROM.put(encoderInvertEEPROMLocation, 0x00);
+  EEPROM.get(encoderInvertEEPROMLocation, isEncoderInverted);
   //ym2612.SetVoice(voices[0]);
   for(uint8_t i = 0; i<MAX_CHANNELS_YM; i++)
       ym2612.SetVoiceManual(i, voices[0]);
@@ -488,8 +495,10 @@ void removeMeta() //Remove useless meta files
   SD.vwd()->rewind();
 }
 
-void HandleRotaryButtonDown()
+void HandleRotaryButton()
 {
+  if(encoderHoldCount >= 1000)
+    return;
   lcdSelectionIndex++;
   lcdSelectionIndex %= 3;
   redrawLCDOnNextLoop = true;
@@ -507,7 +516,7 @@ void LCDRedraw(uint8_t graphicCursorPos)
     lcd.setCursor(0, lcdSelectionIndex);
     lcd.print(" ");
     lcd.setCursor(0, lcdSelectionIndex);
-    lcd.write((uint8_t)0); //Arrow Right
+    isEncoderInverted == true ? lcd.write((uint8_t)3) : lcd.write((uint8_t)0);
   }
 
   lcd.setCursor(1, 0);
@@ -540,7 +549,7 @@ void LCDRedraw(uint8_t graphicCursorPos)
     lcd.setCursor(14, 1);
     lcd.print(" ");
     lcd.setCursor(14, 1);
-    lcd.write((uint8_t)0); //Arrow Right
+    isEncoderInverted == true ? lcd.write((uint8_t)3) : lcd.write((uint8_t)0); //Arrow Right
   }
 
   if(currentFavorite != 0xFF && currentFavorite < 8)
@@ -931,6 +940,8 @@ void HandleRotaryEncoder()
   if(enc != encoderPos && enc % 4 == 0) //Rotary encoders often have multiple steps between each descrete 'click.' In this case, it is 4
   {
     bool isEncoderUp = enc > encoderPos;
+    if(isEncoderInverted)
+      isEncoderUp = !isEncoderUp;
     switch(lcdSelectionIndex)
     {
       case 0:
@@ -998,7 +1009,7 @@ void ScrollFileNameLCD()
       lcd.setCursor(0, lcdSelectionIndex);
       lcd.write(" ");
       lcd.setCursor(0, lcdSelectionIndex);
-      lcd.write((uint8_t)0); //Arrow Right
+      isEncoderInverted == true ? lcd.write((uint8_t)3) : lcd.write((uint8_t)0);
     }
     else
     {
@@ -1309,5 +1320,20 @@ void loop()
     SendPatchSysex(sendPatchToVST);
     sendPatchToVST = 0xFF;
   }
+  while(!digitalReadFast(ENC_BTN) && encoderHoldCount < 1000)
+  {
+    delay(1);
+    encoderHoldCount++;
+    if(encoderHoldCount == 1000)
+    {
+      isEncoderInverted ^= true; //toggle
+      isEncoderInverted == true ? Serial.println("Inverted Encoder...") : Serial.println("Normalized Encoder...");
+      EEPROM.put(encoderInvertEEPROMLocation, isEncoderInverted);
+      LCDRedraw(lcdSelectionIndex);
+      break;
+    }
+  }
+  if(digitalReadFast(ENC_BTN))
+    encoderHoldCount = 0;
 }
  

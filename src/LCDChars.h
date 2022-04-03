@@ -37,4 +37,16 @@ const unsigned char heartChar[8] =
   B00000
 };
 
+const unsigned char arrowCharInvertedRight[] = 
+{
+	B10000,
+	B11000,
+	B10100,
+	B10010,
+	B10010,
+	B10100,
+	B11000,
+	B10000
+};
+
 #endif
